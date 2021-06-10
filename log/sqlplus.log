@@ -1,1 +1,19 @@
 
+14:47:44 sys@PROD1>@db_check
+
+      DBID NAME      CREATED             LOG_MODE     CHECKPOINT_CHANGE# OPEN_MODE            FOR FLASHBACK_ON
+---------- --------- ------------------- ------------ ------------------ -------------------- --- ------------------
+2296151918 PROD1     2021-06-09 21:59:10 NOARCHIVELOG            1010068 READ WRITE           NO  NO
+
+Elapsed: 00:00:00.02
+VALID Objects
+
+no rows selected
+
+Elapsed: 00:00:01.13
+
+no rows selected
+
+Elapsed: 00:00:00.56
+14:47:47 sys@PROD1>
+14:48:20 sys@PROD1>exit
