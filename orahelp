@@ -1,0 +1,170 @@
+
+  Usage: ora <command> [<arguments>] or ora [-u user/pass] <command> [<arguments>]
+  e.g. : ora check     or   ora -u system/password sqlhc <sqlid1> [sqlid2] [sqlid3] 
+  
+    General
+      -u user/pass                             use USER/PASS to log in
+      [] is the default ;  <> is a must
+                                          
+    Commands list:                          
+      - 4031                                   diagnositic ora-4031 problem
+      - alert [2]day                           alert.log ORA- info in recent 2(default) days (v$diag_alert_ext)
+      - ashcnt [30]min                         active sessions count(gv_active_session_history),default recent 30min
+      - ashdump  [1]min                        dump ash records into trc file,default value is 1 minutes      
+      - ashevent 10 2                          ora ashevent recent [10] minutes ,[def=2] ash top n events , grp by inst_id,sample_time,events
+      - ashsql "14:15" 20                    gv_active_session_history and dba_hist_active_sess_history ,group by sql_id and event                       
+      - ashtop | topash
+      - asm                                    Show asm space/free space
+      - awr [bid] [eid]                        ora awr bid eid (all nodes and RAC),top 50 sql;default is last 2 snapshots interval
+      - awrsnap | listsnap  [3]                list snapshots of recent [3] days,alias : listsnap
+      - awr_baseline [bid] [eid]               create an awr baseline for given bid eid
+                             
+      - batch_sqlhc <bid> <eid> <r1><r2><r3> y batch sqlhc for given bid eid,y for no interactive (no need to change select sqlid)
+      - batch_osstat [48]|<bid> <eid>          awr osstat in batch mode(similiar with AWR osstat),fixed 48 snaps or given bid and eid
+      - batch_event  [48]|<bid> <eid>          awr top 5 event in batch mode,fixed 48 snaps or given bid and eid
+      - batch_load   [48]|<bid> <eid>          awr load profile in batch mode,fixed 48 snaps or given bid and eid
+      - batch_iostat [48]|<bid> <eid>          awr top 5 reads tablespace in batch mode (awr: Tablespace IO Stats) 12.1 and below      
+
+      - bc [10]                                view contents of buffer cache(Top 10)           
+      - big [20]                               top n big size objects (single or partition table/index) 
+      - big_by_tbs <tbs_name> [20]             top n big size objects by tablespace name                                  
+      - bind | binds <sql_id>                  display bind capture information for  specified cursor  
+      
+      - col <owner> <tab_name> <col_name>      column info
+      - check                                  unusable indexes,etc.      
+      - cputime                                cputime by day / by top
+      - cursor_summary                         summarize stats about (un)pinned cursors
+                                               
+      - dashcnt "yyyy/mm/dd hh24:mi" [30]    dba_hist_active_sess_history count by sample_time from given time last for 30(def) minutes
+      - dashevent "yyyy/mm/dd hh24:mi" 20 2  ora dashevent given starttime,last for [20] min, top 2 events,grp by inst_id,sample_time,events
+      - dashsql                                same with ashsql 
+      - dbtime                                 dbtime by day / by top
+      - ddl  <name> [owner] [type]             DDL info : dbms_metadata.get_ddl (Case Insensitive); all interactive mode
+      - degree | parallel                      degree of objects (tables and indexes) ,and running parallel processes
+      - dg | dg_info                           data guard :contributed by Albert Liang
+      - dir                                    show all directories info
+      - drop patch|profile|baseline <name>     drop sql patch/sql profile/sql plan baseline
+      - dpr_risk [100]                         simple find direct path read risk (blocks > 0.8*_small_table_threshold and exes> 100 /day )
+      - dup_index <owner>
+      
+      - event                                  v$session summary by event
+      - event2sqlid <event_name> <bid> <eid>   dba_hist_active_sess_history
+      - event_set                              list all event for alter system set events or set event=      
+      - expdash "2020/05/27 10:33:40" 30     12.2+ only ; to default DIR ; listed in term   
+                                          
+      - feature                                about:db link/trigger/partition/compress/temporary/sqlpatch/profile/baseline..    
+      - file | files                           list spfile/control_file/datafile/tempfile names
+      - fulltext  <sql_id>                     display the entire sql_id SQL text(lob),no more than 32767(v$.sql_text has a limit of 1000) 
+      - gather <owner> <table_name>            gather table stats(cascade=>true,no_invalidate=>false)
+                                               
+      - histogram <owner><tab_name><col_name>  get histogram value ratio 
+      - highparse  [500]                       ora highparse  <500 is default> ,top 50 only (same force_matching_signature ,diff sql_id)
+      - highcost [50]                          high cost sql in gv#sql_plan
+      - high_version [100]                     display information for reasons cursor not shared (single sqlid: ora sharing <sqlid>)
+      - hintname <part of hint name>           get hint info from v$sql_hint
+      - hangdump                               hanganalyze 3 + systemdump 10  
+      - idx2sqlid <index_name>                 show sqls use the given index name
+      - idxinfo   <index_name>                 get index info      
+      - index <table_name>                     get all indexes info for given table
+                                               
+      - job                                    show all jobs
+      - kill <sid> <serial> [inst_id]          kill session immediate
+      - longops                                show records in gv$session_longops (running)
+      - lock|blocker                           show blocked rows and blocked chains
+      - lob                                    show top space used lob segment
+      - lobfree <owner><lobname>               display free space for give securefile lob segmentname(no basicfile type) need \$\$      
+                                               
+      - mvsnap                                 view all_snapshots (mview) status                                       
+      - montop [20]                            save top 20(def) sql monitor files, elapsed time desc
+      - monlist [50]                           lists top n (def=50) the statements that have been monitored,sql_exec_start desc
+      - monsave <sqlid> [active]|text          Spool to <sql_id>_active|text.html
+      - mon_bind <sql_id>                      get sql bind values from v#sql_monitor
+      - monsavehis <sqlid> [active]|text       get lastest rid sql monitor report from dba_hist_reports  
+      - mon_index_create      
+      - mon_unzip <12c sql mon html>           unzip 12c base64 sql monitor html to unzip_<file_name>      
+                                               
+      - obj  <part of obj info>[owner]         view detail info for given part of a object_name  ,need %  
+      - open_cursor [100]                      top 30 ,default >100
+      - outline  <profile|patch> <name>        ora outline profile|patch name,get hint set (no sql_plan_baseline)
+                                               
+      - params [<pattern>]                     view all parameters, even hidden ones      
+      - parameter [<pattern>] [2]              parameters in his(recent 2 snap) and current
+      - pc  [8]                                get plan changed in recent [def 31] days   
+      - pc2 [8]                                if last_active phv is the best       
+      - pga [50]                               top 50 pga_used_mem
+      - pga_detail <os_pid>|-mem <size_M>      Gives details on how PGA memory is consumed by a process (given its os PID) : ora pga_detail <pid>
+                                               or by the set of precesses consuming more than <size_mb> MB of PGA memory   : ora pga_detail -mem 100
+      - pid  <pid>                             show detailed pid(from OS) info 
+      - print_table <sql_text>                 display sql result in single column mode(note: when v$ view used,\is needed)
+      - process <pid>                          process detail info ,in print_table mode
+      - process_dump <pid> <level>
+      - processes [<min_mb>]                   display process pga memory info; similiar with pga
+      - purge <sql_id>                         SYS.DBMS_SHARED_POOL.PURGE
+                                               
+      - raw <date|varchar2|number> <value>     ora raw date raw_data_string   
+      - realmon                                like oratop ; repeat exec: ora repeat 5 100 realmon
+      - redo                                   redo info : generate frequence
+      - recover_state|recover                  gv$fast_start_transactions,recover progress
+      - resize                                 show smallest size all datafile can shrink to
+      - repeat <interval> <count|forever>      Repeat an coomand <count> time,Sleep <interval> between two calls
+              <ora_command>                    E.g. ora repeat 5 100 temp
+      - rman                                   rman status and RECOVERY_FILE_DEST info
+                                               
+      - seq                                    show sequences have bad setting (order_flag='Y' or cache_size<=20)
+      - seg <object_name>                      segment info for given object       
+      - session  <sid>                         session detail info ,in print_table mode,in rac ,-i maybe needed                              
+      - sessions [all]|<active>                ora sessions [active](def)|all  (active:also no BACKGROUD)
+      - session_event [all]|<noidle>|<px>      ora session_event | ora session_event px | ora session_event noidle
+      - sh                                     Run a shell command. E.g.  ora repeat 2 5 sh 'ps -edf | grep DESC'
+      - sharing <sql_id>                       print why cursors are not shared ; high_version diag      
+      - sga                                    tell how much sga memory is used and dynamically used
+      - snap|snapshot                          dbms_workload_repository.create_snapshot
+      - sparse_index
+      - sparse_table
+      - sql <sqlid>                            display sql info
+      - sql_baseline <sqlid> <sqlid> <PHV>     
+      - sql_check
+      - sql_check_his
+      - sql_patch <sqlid> <hint>               ora sql_patch <sqlid> <hint>
+      - sql_profile <sqlid> <sqlid> <PHV>      ora sql_profile <sqlid> <sqlid> <PHV> --->fix use given plan
+      - sqlhc <sqlid1> [sqlid2] [sqlid3]...    collect sqlhc for given sqlids  
+      - stats                                  show infomation about stats collection                   
+      - sysmetric "yyyy/mm/dd hh24:mi" [30]    DBA_HIST_SYSMETRIC_HISTORY from given time last for default 30 minutes
+                                               
+      - table  <tab_name> [owner]              show detail info for given table
+      - tabidx    <table_name>                 get table index info 
+      - tbs_last                               fast show tablespace info from dba_hist_tbspc_space_usage last snapshot
+      - tbs_usage                              fast get tablespace usage
+      - tbs_frag                               tablespace fragment info
+      - tbs                                    view all tablespace detail info 
+      - tbsinc                                 display total tablespace size by day
+      - temp                                   view detail usage of temp tablespace  
+      - topash [5]                             top sql/session/activity in recent n(def=5)minutes
+      
+      - toparea                                top sql in gv$sqlarea : 5cpu/5reads/5elap
+      - toparea_by_sig cpu|time|read <topn>    v#sqlarea group by force_matching_signature,topn
+      - topsql_by_plan cpu|time|read <topn>    v#sql group by phv 
+      
+      - tophis cpu|read|time [def max-1] [max] top sql in dba_hist_sqlstat: ora tophis <bid> <eid> (default is last snapshot)
+      - tophis_byplan cpu|read|time ...
+      - tophis_bysig  cpu|read|time ...
+      - toppid [5]                             top command top10, LOCAL top 5(def)
+      - topseg [bid] [eid]                     show awr top segment info as AWR Segments by 'logical Reads' and 'physical Reads'      
+      - top_level <sql_id>                     get sub sql_id by top_level sql_id from dba_hist_active_sess_history     
+      - text2sqlid <text_piece>                find sql_id for given piece of key sql text
+      - tran                                   list all gv$transaction  
+      - trc                                    get trace path      
+                                               
+      - undo                                   show undo info
+      - user | users                           list all users info
+      - version                                show database version
+      - xp  <sql_id>                           display_cursor for given sql_id
+      - xpo <sql_id> [child_number]            xplan.display_cursor for given sql_id(add execution order column)
+      - x   <sql_id>                           display_awr for given sql_id 
+      - xo  <sql_id> [phv]                     xplan.display_awr for given sql_id (add execution order column)
+
+  NOTE
+  ================
+    - Set environment variable DBUSER to change default connect string which  is "/ as sysdba"
+    - Set environment variable ORA_TMP to the default temp directory (default if /tmp when not set)
+

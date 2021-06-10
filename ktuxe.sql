@@ -1,0 +1,16 @@
+select
+    KTUXEUSN,
+    KTUXESLT,
+    KTUXESTA,
+    KTUXECFL,
+    KTUXEUEL,
+    KTUXEDDBF,
+    KTUXEDDBB,
+    KTUXEPUSN,
+    KTUXEPSLT,
+    KTUXEPSQN,
+    KTUXESIZ
+from
+    x$ktuxe
+where
+    KTUXECFL='DEAD';

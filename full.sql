@@ -1,0 +1,87 @@
+set long 10000
+set feedback off
+var USERNAME varchar2(60)
+BEGIN
+  :USERNAME := TRIM(UPPER('&USERNAME'));
+END;
+/
+col username for a30
+select :USERNAME as username from dual;
+
+
+set linesize 500
+set pages 200
+col OBJECT_NAME for a20
+col sql_id for a15
+col SQL_TEXT for a60
+col FTEXT for a60
+col FILTER_PREDICATES for a10
+col PARSING_SCHEMA_NAME for a20
+WITH FSQL AS
+ (SELECT /*+ materialize */
+   SQL_ID, TO_CLOB(UPPER(SQL_FULLTEXT)) AS FTEXT
+    FROM V$SQL
+   WHERE PARSING_SCHEMA_NAME = :USERNAME),
+SQLID AS
+ (SELECT /*+ materialize */
+   PARSING_SCHEMA_NAME, SQL_ID, SQL_TEXT
+    FROM V$SQL
+   WHERE PARSING_SCHEMA_NAME = :USERNAME
+   GROUP BY PARSING_SCHEMA_NAME, SQL_ID, SQL_TEXT),
+SQL AS
+ (SELECT PARSING_SCHEMA_NAME,
+         SQL_ID,
+         SQL_TEXT,
+         (SELECT FTEXT
+            FROM FSQL
+           WHERE SQL_ID = A.SQL_ID
+             AND ROWNUM <= 1) FTEXT
+    FROM SQLID A),
+COL AS
+ (SELECT /*+ materialize */
+   A.SQL_ID,
+   A.OBJECT_OWNER,
+   A.OBJECT_NAME,
+   NVL(A.FILTER_PREDICATES, 'NULL') FILTER_PREDICATES,
+   A.COLUMN_CNT,
+   B.COLUMN_CNTTOTAL,
+   B.SIZE_MB
+    FROM (SELECT SQL_ID,
+                 OBJECT_OWNER,
+                 OBJECT_NAME,
+                 OBJECT_TYPE,
+                 FILTER_PREDICATES,
+                 ACCESS_PREDICATES,
+                 PROJECTION,
+                 LENGTH(PROJECTION) -
+                 LENGTH(REPLACE(PROJECTION, '], ', '] ')) + 1 COLUMN_CNT
+            FROM V$SQL_PLAN
+           WHERE OBJECT_OWNER = :USERNAME
+             AND OPERATION = 'TABLE ACCESS'
+             AND OPTIONS = 'FULL'
+             AND OBJECT_TYPE = 'TABLE') A,
+         (SELECT /*+ USE_HASH(A,B) */
+           A.OWNER, A.TABLE_NAME, A.COLUMN_CNTTOTAL, B.SIZE_MB
+            FROM (SELECT OWNER, TABLE_NAME, COUNT(*) COLUMN_CNTTOTAL
+                    FROM DBA_TAB_COLUMNS
+                   WHERE OWNER = :USERNAME
+                   GROUP BY OWNER, TABLE_NAME) A,
+                 (SELECT OWNER, SEGMENT_NAME, SUM(BYTES / 1024 / 1024) SIZE_MB
+                    FROM DBA_SEGMENTS
+                   WHERE OWNER = :USERNAME
+                   GROUP BY OWNER, SEGMENT_NAME) B
+           WHERE A.OWNER = B.OWNER
+             AND A.TABLE_NAME = B.SEGMENT_NAME) B
+   WHERE A.OBJECT_OWNER = B.OWNER
+     AND A.OBJECT_NAME = B.TABLE_NAME)
+SELECT A.PARSING_SCHEMA_NAME,
+       A.SQL_ID,
+       A.SQL_TEXT,
+       B.OBJECT_NAME,
+       B.SIZE_MB,
+       B.COLUMN_CNT,
+       B.COLUMN_CNTTOTAL,
+       B.FILTER_PREDICATES
+  FROM SQL A, COL B
+ WHERE A.SQL_ID = B.SQL_ID
+ ORDER BY B.SIZE_MB DESC, B.COLUMN_CNT ASC;
