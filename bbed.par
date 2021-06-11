@@ -1,4 +1,0 @@
-blocksize=8192
-listfile=listfile.txt
-mode=edit
-spool=yes
