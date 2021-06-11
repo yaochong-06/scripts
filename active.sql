@@ -3,13 +3,21 @@ set linesize 3000
 set pages 1000
 col username for a10
 col spid for a6
+col sid_and_serial# for a15
 col terminal for a15
 col event for a26
 col machine for a25
-col program for a18
-col sql_text for a30
+col program for a28
+col sql_text for a20
 col sql_id for a13
-select /*+use_nl(a,b,c)*/distinct a.sid,a.serial#,a.username,a.terminal,a.machine,a.program,b.spid,c.sql_id,substr(c.sql_text,0,30) as sql_text
+select /*+use_nl(a,b,c)*/distinct a.sid || ',' ||a.serial# as sid_and_serial#,
+a.username,
+a.terminal,
+a.machine,
+a.program,
+b.spid,
+c.sql_id,
+substr(c.sql_text,0,20) as sql_text
 from v$session a,v$process b,v$sql c
 where a.paddr = b.addr(+)
 and a.sql_hash_value = c.hash_value
@@ -21,8 +29,8 @@ and a.sid not in (select sid from v$mystat where rownum = 1)
 
 --正在执行的SQL语句的等待事件信息
 prompt display the active sessions and events in current node...
-col SECONDS for a10
-col KILL_SQL for a55
+col SECONDS for a7
+col KILL_SQL for a56
 col "P1 P2 P3" for a18
 select /*+ ordered use_nl(a,b) */
 trim(to_char(a.sql_id)) as sql_id,
@@ -30,7 +38,7 @@ b.spid as spid,
 substr(c.event,1,25) as event,
 c.p1 || ',' || c.p2 || ',' ||c.p3 as "P1 P2 P3",
 to_char(LAST_CALL_ET) as seconds,
-to_char(a.logon_time,'yyyymmdd hh24:mi') as logon_time,
+to_char(a.logon_time,'mmdd hh24:mi') as logon_time,
 'alter system disconnect session ''' || a.sid || ',' || a.SERIAL# || ''' immediate;' as kill_sql
 from v$session a,v$process b,v$session_wait c
 where a.type = 'USER' and a.status = 'ACTIVE'
@@ -61,3 +69,7 @@ and a.sid not in (select sid from v$mystat where rownum = 1)
 order by LAST_CALL_ET desc
 /
 
+prompt Dead Transaction Information
+select distinct KTUXECFL,count(*) from x$ktuxe group by KTUXECFL;
+select ADDR,KTUXEUSN,KTUXESLT,KTUXESQN,KTUXESIZ, KTUXECFL from x$ktuxe where KTUXECFL ='DEAD';
+select ADDR,KTUXEUSN,KTUXESLT,KTUXESQN,KTUXESIZ, KTUXECFL from x$ktuxe where KTUXESIZ > 1024;

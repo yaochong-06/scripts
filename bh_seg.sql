@@ -20,28 +20,10 @@ from
 where
         bh.obj = o.data_object_id
 and     o.data_object_id in
-        (
-                select
-                        data_object_id
-                from
-                        all_objects
-                where
-                        upper(object_name) LIKE
-                                UPPER(CASE
-                                    WHEN INSTR('&1','.') > 0 THEN
-                                        SUBSTR('&1',INSTR('&1','.')+1)
-                                    ELSE
-                                        '&1'
-                                    END
-                                     )
-                        AND UPPER(owner) LIKE
-                                UPPER(CASE WHEN INSTR('&1','.') > 0 THEN
-                                    UPPER(SUBSTR('&1',1,INSTR('&1','.')-1))
-                                ELSE
-                                    user
-                                END)
-        )
-)
+        ( select data_object_id
+          from all_objects
+         where object_name = upper('&OBJECT_NAME') AND owner = upper('&owner')
+        ))
 group by block_class, object_type, dba_object, tch, dirty
 order by count(*)
 /

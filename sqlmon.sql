@@ -28,8 +28,7 @@ SPOOL /home/oracle/scripts/report_sql_monitor_active.html
 SELECT DBMS_SQLTUNE.report_sql_monitor(
   sql_id       => :sql_id,
   type         => 'ACTIVE', 
-  report_level => 'ALL',
-  base_path    => 'sqlmon'
+  report_level => 'ALL'
   ) AS report
 FROM dual;
 SPOOL OFF

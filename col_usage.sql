@@ -7,7 +7,7 @@ WHERE c.obj# = cu.obj# (+)
 AND c.intcol# = cu.intcol# (+)
 AND c.obj# = o.obj#
 AND o.owner# = u.user#
-AND o.name LIKE UPPER(&TABLE_NAME)
-AND u.name LIKE UPPER(&USER_NAME)
+AND o.name LIKE UPPER('&TABLE_NAME')
+AND u.name LIKE UPPER('&OWNER')
 ORDER BY c.col#
 /
