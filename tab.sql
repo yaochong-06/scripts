@@ -1,5 +1,6 @@
 
 
+
 prompt Show information about all the tables in the database and the tables you entered...
 
 set serveroutput on
@@ -102,12 +103,20 @@ declare
     cursor c_seg is select sum(bytes/1024/1024/1024) G ,partition_name from dba_segments where segment_name = upper(:table_name) and owner = upper(:owner) 
 group by partition_name order by partition_name;
     v_seg c_seg%rowtype;
-    cursor c_stats is SELECT A.COLUMN_NAME,B.NUM_ROWS,A.NUM_DISTINCT CARDINALITY,ROUND(A.NUM_DISTINCT / B.NUM_ROWS * 100, 2) SELECTIVITY,A.HISTOGRAM,A.NUM_BUCKETS
+    cursor c_stats is SELECT A.COLUMN_NAME,B.NUM_ROWS,A.NUM_DISTINCT CARDINALITY,ROUND(A.NUM_DISTINCT / decode(B.NUM_ROWS,0,1,B.NUM_ROWS) * 100, 2) SELECTIVITY,A.HISTOGRAM,A.NUM_BUCKETS
   FROM DBA_TAB_COL_STATISTICS A, DBA_TABLES B
  WHERE A.OWNER = B.OWNER
    AND A.TABLE_NAME = B.TABLE_NAME
    AND A.TABLE_NAME = upper(:table_name) and a.owner = upper(:owner) order by A.OWNER,A.COLUMN_NAME;
    v_stats c_stats%rowtype;
+   
+   cursor c_sta is select stale_stats,last_analyzed from dba_tab_statistics where owner = upper(:owner) and table_name = upper(:table_name);
+   v_sta c_sta%rowtype;
+   
+   cursor c_modi is select b.INSERTS,b.UPDATES,b.DELETES,b.TIMESTAMP
+   from dba_tab_modifications b 
+   where b.table_name = upper(:table_name) and b.table_owner = upper(:owner) order by b.timestamp;
+   v_modi c_modi%rowtype; 
    
    cursor c_tab_partitions is select T.PARTITION_POSITION,T.PARTITION_NAME,T.HIGH_VALUE,decode(T.NUM_ROWS,null,'None') as NUM_ROWS,decode(to_char(t.last_analyzed,'YYYYMMDD'),null,'None') as last_analyzed,
    round(S.G,2) as G from dba_tab_partitions t, (select sum(bytes/1024/1024/1024) G ,partition_name from dba_segments where segment_name = upper(:table_name) and owner = upper(:owner) 
@@ -127,6 +136,7 @@ group by partition_name order by partition_name;
    (select a.owner,b.table_name,b.column_name,a.SEGMENT_NAME ,trunc(a.bytes/1024/1024) as SIZE_MB from dba_segments a,dba_lobs b
    where a.segment_type like 'LOB%' and a.SEGMENT_NAME=b.SEGMENT_NAME order by a.bytes desc) where  rownum < 11;
    v_big_lob c_big_lob%rowtype;
+
 
 
 begin
@@ -163,6 +173,8 @@ Top 20 Big LOB Information in The Database');
   select count(*) into v_cnt from dba_segments where segment_name = upper(:table_name) and owner = upper(:owner);
   
 if v_cnt = 1 then
+
+
   dbms_output.put_line('
 Non partitioned Table Segment Information');
   dbms_output.put_line('======================');
@@ -172,6 +184,9 @@ Non partitioned Table Segment Information');
     dbms_output.put_line('TABLE_NAME : '|| :TABLE_NAME  || '  |  ' || 'SEGMENT_SIZE : '|| round(v_seg.g,2));
     end loop;
   close c_seg;
+  
+
+
   dbms_output.put_line('
 Non partitioned Table Statistics Information');
   dbms_output.put_line('======================');
@@ -185,6 +200,39 @@ Non partitioned Table Statistics Information');
     end loop;
     dbms_output.put_line('----------------------------------------------------------------------------------------------');
   close c_stats;
+
+
+  dbms_output.put_line('
+Non partitioned Table Statistics STALE_STATS, Yes Means Expired');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('-------------------------------------');
+  dbms_output.put_line('| STALE_STATS |' || ' LAST_ANALYZED       ' || '|');
+  dbms_output.put_line('-------------------------------------');
+  open c_sta;
+    loop fetch c_sta into v_sta;
+    exit when c_sta%notfound;
+    dbms_output.put_line('| ' || lpad(v_sta.STALE_STATS,11) ||' | '|| v_sta.LAST_ANALYZED || ' |');
+    end loop;
+    dbms_output.put_line('-------------------------------------');
+  close c_sta;
+
+
+  dbms_output.put_line('
+Non partitioned Table Modification Information(dba_tab_modifications)');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('---------------------------------------------------------------------');
+  dbms_output.put_line('|'  || ' INSERTS          |' || ' UPDATES      ' || '| DELETES |' || ' TIMESTAMP ' || '|');
+  dbms_output.put_line('---------------------------------------------------------------------');
+  open c_modi;
+    loop fetch c_modi into v_modi;
+    exit when c_modi%notfound;
+    dbms_output.put_line('| ' || v_modi.INSERTS ||' | '|| v_modi.UPDATES || ' | '|| v_modi.DELETES || ' | '|| v_modi.TIMESTAMP || '|');
+    end loop;
+    dbms_output.put_line('---------------------------------------------------------------------');
+  close c_modi;
+
+
+
   else 
   dbms_output.put_line('
 Partitioned Table Segment Information');
@@ -201,22 +249,7 @@ Partitioned Table Segment Information');
     dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_tab_partitions;
 
-
 end if;
 end;
 /
 
-
-
-col table_owner for A10
-col table_name for A30
-
-select
-table_owner,
-table_name,
-inserts,
-updates,
-deletes,
-timestamp
-from dba_tab_modifications
-where table_name = :TABLE_NAME;

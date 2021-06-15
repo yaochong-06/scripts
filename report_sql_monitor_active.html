@@ -1,0 +1,1707 @@
+<html>
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <base href="http://download.oracle.com/otn_software/"/>
+  <script language="javascript" type="text/javascript" src="emviewers/scripts/flashver.js">
+   <!--Test flash version-->
+  </script>
+  <style>
+      body { margin: 0px; overflow:hidden }
+    </style>
+ </head>
+ <body scroll="no">
+  <script type="text/xml">
+   <!--FXTMODEL-->
+   <report db_version="11.2.0.4.0" elapsed_time="1.04" cpu_time="0.87">
+    <report_id><![CDATA[/orarep/sqlmonitor/main?bucket_max_count=128&event_detail=yes&report_level=ALL]]></report_id>
+    <sql_monitor_report version="4.0" sysdate="06/12/2021 22:03:38">
+     <report_parameters>
+      <bucket_count>91</bucket_count>
+      <interval_start>06/12/2021 22:02:09</interval_start>
+      <interval_end>06/12/2021 22:03:39</interval_end>
+     </report_parameters>
+     <target instance_id="1" session_id="26" session_serial="1691" sql_id="dbth6vym0qrm3" sql_exec_start="06/12/2021 22:02:09" sql_exec_id="16777216" sql_plan_hash="3980946468" db_unique_name="prod1" db_platform_name="Linux x86 64-bit" report_host_name="centos7">
+      <user_id>0</user_id>
+      <user>SYS</user>
+      <program>oracle@centos7 (J000)</program>
+      <module>DBMS_SCHEDULER</module>
+      <action>ORA$AT_OS_OPT_SY_47</action>
+      <service>SYS$USERS</service>
+      <sql_fulltext is_full="N">/* SQL Analyze(1) */ select /*+  full(t)    no_parallel(t) no_parallel_index(t) dbms_stats cursor_sharing_exact use_weak_name_resl dynamic_sampling(0) no_monitoring no_substrb_pad  */to_char(count(&quot;OWNER&quot;)),to_char(substrb(dump(min(&quot;OWNER&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;OWNER&quot;),16,0,32),1,120)),to_char(count(&quot;OBJECT_NAME&quot;)),to_char(substrb(dump(min(&quot;OBJECT_NAME&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;OBJECT_NAME&quot;),16,0,32),1,120)),to_char(count(&quot;SUBOBJECT_NAME&quot;)),to_char(substrb(dump(min(&quot;SUBOBJECT_NAME&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;SUBOBJECT_NAME&quot;),16,0,32),1,120)),to_char(count(&quot;OBJECT_ID&quot;)),to_char(substrb(dump(min(&quot;OBJECT_ID&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;OBJECT_ID&quot;),16,0,32),1,120)),to_char(count(&quot;DATA_OBJECT_ID&quot;)),to_char(substrb(dump(min(&quot;DATA_OBJECT_ID&quot;),16,0,32)
+,1,120)),to_char(substrb(dump(max(&quot;DATA_OBJECT_ID&quot;),16,0,32),1,120)),to_char(count(&quot;OBJECT_TYPE&quot;)),to_char(substrb(dump(min(&quot;OBJECT_TYPE&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;OBJECT_TYPE&quot;),16,0,32),1,120)),to_char(count(&quot;CREATED&quot;)),to_char(substrb(dump(min(&quot;CREATED&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;CREATED&quot;),16,0,32),1,120)),to_char(count(&quot;LAST_DDL_TIME&quot;)),to_char(substrb(dump(min(&quot;LAST_DDL_TIME&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;LAST_DDL_TIME&quot;),16,0,32),1,120)),to_char(count(&quot;TIMESTAMP&quot;)),to_char(substrb(dump(min(&quot;TIMESTAMP&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;TIMESTAMP&quot;),16,0,32),1,120)),to_char(count(&quot;STATUS&quot;)),to_char(substrb(dump(min(&quot;STATUS&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;STATUS&quot;),16,0,32),1,120)),to_char(count(&quot;TEMPORARY&quot;)),to_char(substrb(dump(min(&quot;TEMPORARY
+&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;TEMPORARY&quot;),16,0,32),1,120)),to_char(count(&quot;GENERATED&quot;)),to_char(substrb(dump(min(&quot;GENERATED&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;GENERATED&quot;),16,0,32),1,120)),to_char(count(&quot;SECONDARY&quot;)),to_char(substrb(dump(min(&quot;SECONDARY&quot;),16,0,32),1,120)),to_char(substrb(dump(max(&quot;SECONDARY&quot;),16,0,32),1,12</sql_fulltext>
+      <status>DONE (ALL ROWS)</status>
+      <refresh_count>45</refresh_count>
+      <first_refresh_time>06/12/2021 22:02:13</first_refresh_time>
+      <last_refresh_time>06/12/2021 22:03:38</last_refresh_time>
+      <duration>89</duration>
+      <rminfo rmcg="ORA$AUTOTASK_STATS_GROUP"/>
+      <optimizer_env type="sys">
+       <param name="active_instance_count">1</param>
+       <param name="is_recur_flags">0</param>
+       <param name="parallel_autodop">0</param>
+       <param name="parallel_ddl_mode">enabled</param>
+       <param name="parallel_ddldml">0</param>
+       <param name="parallel_degree">0</param>
+       <param name="parallel_dml_mode">disabled</param>
+       <param name="parallel_execution_enabled">true</param>
+       <param name="parallel_max_degree">2</param>
+       <param name="parallel_query_default_dop">0</param>
+       <param name="parallel_query_mode">enabled</param>
+       <param name="pga_aggregate_target">208896 KB</param>
+       <param name="total_cpu_count">1</param>
+      </optimizer_env>
+     </target>
+     <stats type="monitor">
+      <stat name="elapsed_time">92592745</stat>
+      <stat name="cpu_time">9884141</stat>
+      <stat name="user_io_wait_time">82708604</stat>
+      <stat name="user_fetch_count">1</stat>
+      <stat name="buffer_gets">1260601</stat>
+      <stat name="disk_reads">9559</stat>
+      <stat name="read_reqs">9559</stat>
+      <stat name="read_bytes">10002948096</stat>
+     </stats>
+     <activity_sampled first_sample_time="06/12/2021 22:02:10" last_sample_time="06/12/2021 22:03:38" duration="89" count="89" wait_count="83" cpu_count="6" cpu_cores="1" hyperthread="N">
+      <activity class="Cpu">6</activity>
+      <activity class="User I/O" event="db file scattered read">83</activity>
+      <activity_histogram bucket_interval="1" bucket_count="91" start_time="06/12/2021 22:02:09" end_time="06/12/2021 22:03:39" duration="91">
+       <bucket number="2">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="3">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="4">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="5">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="6">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="7">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="8">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="9">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="10">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="11">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="12">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="13">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="14">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="15">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="16">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="17">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="18">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="19">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="20">
+        <activity class="Cpu">1</activity>
+       </bucket>
+       <bucket number="21">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="22">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="23">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="24">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="25">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="26">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="27">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="28">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="29">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="30">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="31">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="32">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="33">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="34">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="35">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="36">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="37">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="38">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="39">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="40">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="41">
+        <activity class="Cpu">1</activity>
+       </bucket>
+       <bucket number="42">
+        <activity class="Cpu">1</activity>
+       </bucket>
+       <bucket number="43">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="44">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="45">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="46">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="47">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="48">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="49">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="50">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="51">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="52">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="53">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="54">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="55">
+        <activity class="Cpu">1</activity>
+       </bucket>
+       <bucket number="56">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="57">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="58">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="59">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="60">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="61">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="62">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="63">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="64">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="65">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="66">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="67">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="68">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="69">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="70">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="71">
+        <activity class="Cpu">1</activity>
+       </bucket>
+       <bucket number="72">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="73">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="74">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="75">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="76">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="77">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="78">
+        <activity class="Cpu">1</activity>
+       </bucket>
+       <bucket number="79">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="80">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="81">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="82">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="83">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="84">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="85">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="86">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="87">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="88">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="89">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+       <bucket number="90">
+        <activity class="User I/O" event="db file scattered read">1</activity>
+       </bucket>
+      </activity_histogram>
+     </activity_sampled>
+     <activity_detail start_time="06/12/2021 22:02:09" end_time="06/12/2021 22:03:39" first_sample_time="06/12/2021 22:02:10" last_sample_time="06/12/2021 22:03:38" duration="89" sample_interval="1" bucket_interval="1" bucket_count="91" bucket_duration="91" cpu_cores="1" total_cpu_cores="1" hyperthread="N">
+      <bucket number="2">
+       <activity class="User I/O" event="db file scattered read" line="3" top_sql_id="b6usrg82hwsa3">1</activity>
+      </bucket>
+      <bucket number="3">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="4">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="5">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="6">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="7">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="8">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="9">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="10">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="11">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="12">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="13">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="14">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="15">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="16">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="17">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="18">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="19">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="20">
+       <activity class="Cpu" line="3">1</activity>
+      </bucket>
+      <bucket number="21">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="22">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="23">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="24">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="25">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="26">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="27">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="28">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="29">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="30">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="31">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="32">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="33">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="34">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="35">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="36">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="37">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="38">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="39">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="40">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="41">
+       <activity class="Cpu" line="3">1</activity>
+      </bucket>
+      <bucket number="42">
+       <activity class="Cpu" line="3">1</activity>
+      </bucket>
+      <bucket number="43">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="44">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="45">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="46">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="47">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="48">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="49">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="50">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="51">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="52">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="53">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="54">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="55">
+       <activity class="Cpu" line="3">1</activity>
+      </bucket>
+      <bucket number="56">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="57">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="58">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="59">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="60">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="61">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="62">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="63">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="64">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="65">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="66">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="67">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="68">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="69">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="70">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="71">
+       <activity class="Cpu" line="3">1</activity>
+      </bucket>
+      <bucket number="72">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="73">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="74">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="75">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="76">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="77">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="78">
+       <activity class="Cpu" line="3">1</activity>
+      </bucket>
+      <bucket number="79">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="80">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="81">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="82">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="83">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="84">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="85">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="86">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="87">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="88">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="89">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+      <bucket number="90">
+       <activity class="User I/O" event="db file scattered read" line="3">1</activity>
+      </bucket>
+     </activity_detail>
+     <plan_monitor max_activity_count="89" max_io_reqs="9050" max_io_bytes="9485475840" max_cpu_count="6" max_wait_count="83" max_other_sql_count="0">
+      <operation id="0" name="SELECT STATEMENT" depth="0" position="0">
+       <stats type="plan_monitor">
+        <stat name="first_active">06/12/2021 22:03:38</stat>
+        <stat name="last_active">06/12/2021 22:03:38</stat>
+        <stat name="duration">1</stat>
+        <stat name="from_most_recent">0</stat>
+        <stat name="from_sql_exec_start">89</stat>
+        <stat name="starts">1</stat>
+        <stat name="cardinality">1</stat>
+       </stats>
+      </operation>
+      <operation id="1" parent_id="0" name="SORT" options="AGGREGATE" depth="1" position="1">
+       <optimizer>
+        <cardinality>1</cardinality>
+        <bytes>98</bytes>
+       </optimizer>
+       <stats type="plan_monitor">
+        <stat name="first_active">06/12/2021 22:03:38</stat>
+        <stat name="last_active">06/12/2021 22:03:38</stat>
+        <stat name="duration">1</stat>
+        <stat name="from_most_recent">0</stat>
+        <stat name="from_sql_exec_start">89</stat>
+        <stat name="starts">1</stat>
+        <stat name="max_starts" sid="26">1</stat>
+        <stat name="dop">1</stat>
+        <stat name="cardinality">1</stat>
+        <stat name="max_card" sid="26">1</stat>
+       </stats>
+      </operation>
+      <operation id="2" parent_id="1" name="APPROXIMATE NDV" options="AGGREGATE" depth="2" position="1">
+       <optimizer>
+        <cardinality>2760288</cardinality>
+        <bytes>270508224</bytes>
+        <cost>340566</cost>
+        <cpu_cost>10134664249</cpu_cost>
+        <io_cost>340291</io_cost>
+        <time>4087</time>
+       </optimizer>
+       <stats type="plan_monitor">
+        <stat name="starts">1</stat>
+        <stat name="max_starts" sid="26">1</stat>
+        <stat name="dop">1</stat>
+       </stats>
+      </operation>
+      <operation id="3" parent_id="2" name="TABLE ACCESS" options="FULL" depth="3" position="1">
+       <object type="TABLE">
+        <owner>SYS</owner>
+        <name>A</name>
+       </object>
+       <optimizer>
+        <cardinality>2760288</cardinality>
+        <bytes>270508224</bytes>
+        <cost>340566</cost>
+        <cpu_cost>10134664249</cpu_cost>
+        <io_cost>340291</io_cost>
+        <time>4087</time>
+       </optimizer>
+       <stats type="plan_monitor">
+        <stat name="first_active">06/12/2021 22:02:10</stat>
+        <stat name="first_row">06/12/2021 22:02:13</stat>
+        <stat name="last_active">06/12/2021 22:03:38</stat>
+        <stat name="duration">89</stat>
+        <stat name="from_most_recent">0</stat>
+        <stat name="from_sql_exec_start">1</stat>
+        <stat name="starts">1</stat>
+        <stat name="max_starts" sid="26">1</stat>
+        <stat name="dop">1</stat>
+        <stat name="cardinality">0</stat>
+        <stat name="max_card" sid="26">0</stat>
+        <stat name="read_reqs">9050</stat>
+        <stat name="max_read_reqs" sid="26">9050</stat>
+        <stat name="read_bytes">9485475840</stat>
+        <stat name="max_read_bytes" sid="26">9485475840</stat>
+       </stats>
+       <activity_sampled start_time="06/12/2021 22:02:10" end_time="06/12/2021 22:03:38" duration="89" count="89" wait_count="83" cpu_count="6" other_sql_count="0" cpu_cores="1" hyperthread="N">
+        <activity class="Cpu">6</activity>
+        <activity class="User I/O" event="db file scattered read">83</activity>
+        <activity_histogram bucket_interval="1" bucket_count="91" start_time="06/12/2021 22:02:09" end_time="06/12/2021 22:03:39" duration="91">
+         <bucket number="2">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="3">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="4">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="5">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="6">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="7">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="8">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="9">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="10">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="11">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="12">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="13">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="14">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="15">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="16">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="17">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="18">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="19">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="20">
+          <activity class="Cpu">1</activity>
+         </bucket>
+         <bucket number="21">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="22">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="23">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="24">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="25">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="26">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="27">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="28">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="29">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="30">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="31">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="32">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="33">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="34">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="35">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="36">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="37">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="38">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="39">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="40">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="41">
+          <activity class="Cpu">1</activity>
+         </bucket>
+         <bucket number="42">
+          <activity class="Cpu">1</activity>
+         </bucket>
+         <bucket number="43">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="44">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="45">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="46">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="47">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="48">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="49">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="50">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="51">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="52">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="53">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="54">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="55">
+          <activity class="Cpu">1</activity>
+         </bucket>
+         <bucket number="56">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="57">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="58">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="59">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="60">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="61">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="62">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="63">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="64">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="65">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="66">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="67">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="68">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="69">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="70">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="71">
+          <activity class="Cpu">1</activity>
+         </bucket>
+         <bucket number="72">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="73">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="74">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="75">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="76">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="77">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="78">
+          <activity class="Cpu">1</activity>
+         </bucket>
+         <bucket number="79">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="80">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="81">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="82">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="83">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="84">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="85">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="86">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="87">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="88">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="89">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+         <bucket number="90">
+          <activity class="User I/O" event="db file scattered read">1</activity>
+         </bucket>
+        </activity_histogram>
+       </activity_sampled>
+      </operation>
+     </plan_monitor>
+     <metrics bucket_interval="1" bucket_count="91" start_time="06/12/2021 22:02:09" end_time="06/12/2021 22:03:39" duration="91" cpu_cores="1" hyperthread="N">
+      <bucket number="1">
+       <val l="nb_cpu">.49</val>
+       <val l="reads">134</val>
+       <val l="read_kb">43474</val>
+       <val l="interc_kb">43474</val>
+       <val l="pga_kb">7786</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="2">
+       <val l="nb_cpu">.37</val>
+       <val l="reads">199</val>
+       <val l="read_kb">161502</val>
+       <val l="interc_kb">161502</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="3">
+       <val l="nb_cpu">.31</val>
+       <val l="reads">118</val>
+       <val l="read_kb">121138</val>
+       <val l="interc_kb">121138</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="4">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">102</val>
+       <val l="read_kb">104944</val>
+       <val l="interc_kb">104944</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="5">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109825</val>
+       <val l="interc_kb">109825</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="6">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110592</val>
+       <val l="interc_kb">110592</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="7">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109575</val>
+       <val l="interc_kb">109575</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="8">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108274</val>
+       <val l="interc_kb">108274</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="9">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">109</val>
+       <val l="read_kb">111202</val>
+       <val l="interc_kb">111202</val>
+       <val l="pga_kb">9385</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="10">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">103</val>
+       <val l="read_kb">105123</val>
+       <val l="interc_kb">105123</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="11">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110594</val>
+       <val l="interc_kb">110594</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="12">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110589</val>
+       <val l="interc_kb">110589</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="13">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">108</val>
+       <val l="read_kb">109584</val>
+       <val l="interc_kb">109584</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="14">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">107</val>
+       <val l="read_kb">107529</val>
+       <val l="interc_kb">107529</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="15">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">104</val>
+       <val l="read_kb">106530</val>
+       <val l="interc_kb">106530</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="16">
+       <val l="nb_cpu">.09</val>
+       <val l="reads">94</val>
+       <val l="read_kb">96241</val>
+       <val l="interc_kb">96241</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="17">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">103</val>
+       <val l="read_kb">105442</val>
+       <val l="interc_kb">105442</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="18">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">111</val>
+       <val l="read_kb">113685</val>
+       <val l="interc_kb">113685</val>
+       <val l="pga_kb">9377</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="19">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110619</val>
+       <val l="interc_kb">110619</val>
+       <val l="pga_kb">9380</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="20">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109520</val>
+       <val l="interc_kb">109520</val>
+       <val l="pga_kb">9374</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="21">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">104</val>
+       <val l="read_kb">106236</val>
+       <val l="interc_kb">106236</val>
+       <val l="pga_kb">9373</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="22">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">103</val>
+       <val l="read_kb">104990</val>
+       <val l="interc_kb">104990</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="23">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">102</val>
+       <val l="read_kb">104183</val>
+       <val l="interc_kb">104183</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="24">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">105</val>
+       <val l="read_kb">107766</val>
+       <val l="interc_kb">107766</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="25">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">109</val>
+       <val l="read_kb">112125</val>
+       <val l="interc_kb">112125</val>
+       <val l="pga_kb">9376</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="26">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">110</val>
+       <val l="read_kb">112140</val>
+       <val l="interc_kb">112140</val>
+       <val l="pga_kb">9090</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="27">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108818</val>
+       <val l="interc_kb">108818</val>
+       <val l="pga_kb">8227</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="28">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">110</val>
+       <val l="read_kb">112330</val>
+       <val l="interc_kb">112330</val>
+       <val l="pga_kb">8221</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="29">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110415</val>
+       <val l="interc_kb">110415</val>
+       <val l="pga_kb">8228</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="30">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">104</val>
+       <val l="read_kb">106411</val>
+       <val l="interc_kb">106411</val>
+       <val l="pga_kb">8219</val>
+       <val l="tmp_kb">1023</val>
+      </bucket>
+      <bucket number="31">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">104</val>
+       <val l="read_kb">106541</val>
+       <val l="interc_kb">106541</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="32">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">104</val>
+       <val l="read_kb">106748</val>
+       <val l="interc_kb">106748</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="33">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108284</val>
+       <val l="interc_kb">108284</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="34">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110590</val>
+       <val l="interc_kb">110590</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="35">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110339</val>
+       <val l="interc_kb">110339</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="36">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108806</val>
+       <val l="interc_kb">108806</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="37">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">104</val>
+       <val l="read_kb">106627</val>
+       <val l="interc_kb">106627</val>
+       <val l="pga_kb">8237</val>
+       <val l="tmp_kb">1026</val>
+      </bucket>
+      <bucket number="38">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108347</val>
+       <val l="interc_kb">108347</val>
+       <val l="pga_kb">8219</val>
+       <val l="tmp_kb">1023</val>
+      </bucket>
+      <bucket number="39">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">109</val>
+       <val l="read_kb">112045</val>
+       <val l="interc_kb">112045</val>
+       <val l="pga_kb">8158</val>
+       <val l="tmp_kb">1016</val>
+      </bucket>
+      <bucket number="40">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">104</val>
+       <val l="read_kb">106630</val>
+       <val l="interc_kb">106630</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="41">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">103</val>
+       <val l="read_kb">105720</val>
+       <val l="interc_kb">105720</val>
+       <val l="pga_kb">8229</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="42">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108242</val>
+       <val l="interc_kb">108242</val>
+       <val l="pga_kb">8219</val>
+       <val l="tmp_kb">1023</val>
+      </bucket>
+      <bucket number="43">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">103</val>
+       <val l="read_kb">105964</val>
+       <val l="interc_kb">105964</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="44">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109616</val>
+       <val l="interc_kb">109616</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="45">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">102</val>
+       <val l="read_kb">104547</val>
+       <val l="interc_kb">104547</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="46">
+       <val l="nb_cpu">.09</val>
+       <val l="reads">100</val>
+       <val l="read_kb">102203</val>
+       <val l="interc_kb">102203</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="47">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">110</val>
+       <val l="read_kb">112983</val>
+       <val l="interc_kb">112983</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="48">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">105</val>
+       <val l="read_kb">108007</val>
+       <val l="interc_kb">108007</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="49">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108106</val>
+       <val l="interc_kb">108106</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="50">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">103</val>
+       <val l="read_kb">105130</val>
+       <val l="interc_kb">105130</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="51">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109617</val>
+       <val l="interc_kb">109617</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="52">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108445</val>
+       <val l="interc_kb">108445</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="53">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">110</val>
+       <val l="read_kb">112740</val>
+       <val l="interc_kb">112740</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="54">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">104</val>
+       <val l="read_kb">106798</val>
+       <val l="interc_kb">106798</val>
+       <val l="pga_kb">8230</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="55">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108618</val>
+       <val l="interc_kb">108618</val>
+       <val l="pga_kb">8218</val>
+       <val l="tmp_kb">1023</val>
+      </bucket>
+      <bucket number="56">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">110</val>
+       <val l="read_kb">112212</val>
+       <val l="interc_kb">112212</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="57">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109864</val>
+       <val l="interc_kb">109864</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="58">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108249</val>
+       <val l="interc_kb">108249</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="59">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109372</val>
+       <val l="interc_kb">109372</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="60">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">103</val>
+       <val l="read_kb">104985</val>
+       <val l="interc_kb">104985</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="61">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">102</val>
+       <val l="read_kb">104949</val>
+       <val l="interc_kb">104949</val>
+       <val l="pga_kb">8230</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="62">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108714</val>
+       <val l="interc_kb">108714</val>
+       <val l="pga_kb">8218</val>
+       <val l="tmp_kb">1023</val>
+      </bucket>
+      <bucket number="63">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">105</val>
+       <val l="read_kb">108019</val>
+       <val l="interc_kb">108019</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="64">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110689</val>
+       <val l="interc_kb">110689</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="65">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">102</val>
+       <val l="read_kb">103962</val>
+       <val l="interc_kb">103962</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="66">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">102</val>
+       <val l="read_kb">104106</val>
+       <val l="interc_kb">104106</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="67">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109155</val>
+       <val l="interc_kb">109155</val>
+       <val l="pga_kb">8231</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="68">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108186</val>
+       <val l="interc_kb">108186</val>
+       <val l="pga_kb">8225</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="69">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109689</val>
+       <val l="interc_kb">109689</val>
+       <val l="pga_kb">8232</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="70">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">105</val>
+       <val l="read_kb">107193</val>
+       <val l="interc_kb">107193</val>
+       <val l="pga_kb">8229</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="71">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108989</val>
+       <val l="interc_kb">108989</val>
+       <val l="pga_kb">8219</val>
+       <val l="tmp_kb">1023</val>
+      </bucket>
+      <bucket number="72">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108295</val>
+       <val l="interc_kb">108295</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="73">
+       <val l="nb_cpu">.08</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110594</val>
+       <val l="interc_kb">110594</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="74">
+       <val l="nb_cpu">.03</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109615</val>
+       <val l="interc_kb">109615</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="75">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">105</val>
+       <val l="read_kb">107472</val>
+       <val l="interc_kb">107472</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="76">
+       <val l="nb_cpu">.18</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110595</val>
+       <val l="interc_kb">110595</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="77">
+       <val l="nb_cpu">.08</val>
+       <val l="reads">107</val>
+       <val l="read_kb">109855</val>
+       <val l="interc_kb">109855</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="78">
+       <val l="nb_cpu">.03</val>
+       <val l="reads">105</val>
+       <val l="read_kb">107034</val>
+       <val l="interc_kb">107034</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="79">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">105</val>
+       <val l="read_kb">107958</val>
+       <val l="interc_kb">107958</val>
+       <val l="pga_kb">8228</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="80">
+       <val l="nb_cpu">.18</val>
+       <val l="reads">111</val>
+       <val l="read_kb">114157</val>
+       <val l="interc_kb">114157</val>
+       <val l="pga_kb">8220</val>
+       <val l="tmp_kb">1023</val>
+      </bucket>
+      <bucket number="81">
+       <val l="nb_cpu">.1</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108944</val>
+       <val l="interc_kb">108944</val>
+       <val l="pga_kb">8230</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="82">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">105</val>
+       <val l="read_kb">107344</val>
+       <val l="interc_kb">107344</val>
+       <val l="pga_kb">8218</val>
+       <val l="tmp_kb">1023</val>
+      </bucket>
+      <bucket number="83">
+       <val l="nb_cpu">.11</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108952</val>
+       <val l="interc_kb">108952</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="84">
+       <val l="nb_cpu">.13</val>
+       <val l="reads">103</val>
+       <val l="read_kb">104968</val>
+       <val l="interc_kb">104968</val>
+       <val l="pga_kb">8232</val>
+       <val l="tmp_kb">1025</val>
+      </bucket>
+      <bucket number="85">
+       <val l="nb_cpu">.13</val>
+       <val l="reads">106</val>
+       <val l="read_kb">108760</val>
+       <val l="interc_kb">108760</val>
+       <val l="pga_kb">8225</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="86">
+       <val l="nb_cpu">.12</val>
+       <val l="reads">105</val>
+       <val l="read_kb">107459</val>
+       <val l="interc_kb">107459</val>
+       <val l="pga_kb">8223</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="87">
+       <val l="nb_cpu">.09</val>
+       <val l="reads">108</val>
+       <val l="read_kb">110112</val>
+       <val l="interc_kb">110112</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="88">
+       <val l="nb_cpu">.03</val>
+       <val l="reads">105</val>
+       <val l="read_kb">107568</val>
+       <val l="interc_kb">107568</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="89">
+       <val l="nb_cpu">.17</val>
+       <val l="reads">104</val>
+       <val l="read_kb">106888</val>
+       <val l="interc_kb">106888</val>
+       <val l="pga_kb">8224</val>
+       <val l="tmp_kb">1024</val>
+      </bucket>
+      <bucket number="90">
+       <val l="nb_cpu">.45</val>
+       <val l="reads">326</val>
+       <val l="writes">4</val>
+       <val l="read_kb">136902</val>
+       <val l="write_kb">184</val>
+       <val l="interc_kb">137086</val>
+       <val l="pga_kb">7996</val>
+       <val l="tmp_kb">1268</val>
+      </bucket>
+     </metrics>
+    </sql_monitor_report>
+   </report>
+   <!--FXTMODEL-->
+  </script>
+  <script language="JavaScript" type="text/javascript" src="emviewers/scripts/loadswf.js">
+   <!--Load report viewer-->
+  </script>
+  <iframe name="_history" frameborder="0" scrolling="no" width="22" height="0">
+   <html>
+    <head>
+     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+     <script type="text/javascript" language="JavaScript1.2" charset="utf-8">
+                var v = new top.Vars(top.getSearch(window));
+                var fv = v.toString(&apos;$_&apos;);
+              </script>
+    </head>
+    <body>
+     <script type="text/javascript" language="JavaScript1.2" charset="utf-8" src="emviewers/scripts/document.js">
+      <!--Run document script-->
+     </script>
+    </body>
+   </html>
+  </iframe>
+ </body>
+</html>
+
+Elapsed: 00:00:01.21
