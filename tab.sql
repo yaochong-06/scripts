@@ -110,7 +110,8 @@ group by partition_name order by partition_name;
    AND A.TABLE_NAME = upper(:table_name) and a.owner = upper(:owner) order by A.OWNER,A.COLUMN_NAME;
    v_stats c_stats%rowtype;
    
-   cursor c_sta is select stale_stats,last_analyzed from dba_tab_statistics where owner = upper(:owner) and table_name = upper(:table_name);
+   cursor c_sta is select case when PARTITION_NAME is null then 'Current Table' else PARTITION_NAME end as PARTITION_NAME ,
+                          case when PARTITION_POSITION is null then 'Current Table' else to_char(PARTITION_POSITION) end as PARTITION_POSITION,stale_stats,last_analyzed from dba_tab_statistics where owner = upper(:owner) and table_name = upper(:table_name);
    v_sta c_sta%rowtype;
    
    cursor c_modi is select b.INSERTS,b.UPDATES,b.DELETES,b.TIMESTAMP
@@ -118,8 +119,13 @@ group by partition_name order by partition_name;
    where b.table_name = upper(:table_name) and b.table_owner = upper(:owner) order by b.timestamp;
    v_modi c_modi%rowtype; 
    
-   cursor c_tab_partitions is select T.PARTITION_POSITION,T.PARTITION_NAME,T.HIGH_VALUE,decode(T.NUM_ROWS,null,'None') as NUM_ROWS,decode(to_char(t.last_analyzed,'YYYYMMDD'),null,'None') as last_analyzed,
-   round(S.G,2) as G from dba_tab_partitions t, (select sum(bytes/1024/1024/1024) G ,partition_name from dba_segments where segment_name = upper(:table_name) and owner = upper(:owner) 
+   cursor c_tab_partitions is select T.PARTITION_POSITION,T.PARTITION_NAME,
+                               T.HIGH_VALUE,
+                               case when t.NUM_ROWS is null then 'None' else to_char(t.NUM_ROWS) end as NUM_ROWS,
+                               case when to_char(t.last_analyzed,'YYYYMMDD') is null then 'None' else to_char(t.last_analyzed,'YYYYMMDD') end as last_analyzed,
+                               round(S.G,2) as G,
+                               t.subpartition_count as subpartition_cnt,t.COMPRESSION
+   from dba_tab_partitions t, (select sum(bytes/1024/1024/1024) G ,partition_name from dba_segments where segment_name = upper(:table_name) and owner = upper(:owner) 
    group by partition_name) s 
    where s.partition_name = t.PARTITION_NAME
    and table_owner = upper(:owner)
@@ -226,7 +232,7 @@ Non partitioned Table Modification Information(dba_tab_modifications)');
   open c_modi;
     loop fetch c_modi into v_modi;
     exit when c_modi%notfound;
-    dbms_output.put_line('| ' || v_modi.INSERTS ||' | '|| v_modi.UPDATES || ' | '|| v_modi.DELETES || ' | '|| v_modi.TIMESTAMP || '|');
+    dbms_output.put_line('| ' || lpad(v_modi.INSERTS,16) ||' | '|| lpad(v_modi.UPDATES,12) || ' | '|| v_modi.DELETES || ' | '|| v_modi.TIMESTAMP || '|');
     end loop;
     dbms_output.put_line('---------------------------------------------------------------------');
   close c_modi;
@@ -235,19 +241,67 @@ Non partitioned Table Modification Information(dba_tab_modifications)');
 
   else 
   dbms_output.put_line('
-Partitioned Table Segment Information');
+Partition Table Segment Information');
   dbms_output.put_line('======================');
   
     open c_tab_partitions;
-    dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-    dbms_output.put_line('| POSITION |' || ' PARTITION_NAME    ' || '| HIGH_VALUE                                                                       |' || ' NUM_ROWS       ' || '| LAST_ANALYZED |' || ' PARTITION_SIZE(G) '||'|');
-    dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('| POSITION |' || ' PARTITION_NAME    ' || '| HIGH_VALUE                                                   |' || ' NUM_ROWS    ' || '| LAST_ANALYZED |' || ' PARTITION_SIZE(G) '|| '| SUBPART_CNT |' || ' COMPRESSION ' ||'|');
+    dbms_output.put_line('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
     loop fetch c_tab_partitions into v_tab_pars;
     exit when c_tab_partitions%notfound;
-    dbms_output.put_line('| '|| rpad(v_tab_pars.PARTITION_POSITION,8) || ' | ' || rpad(v_tab_pars.partition_name,17) || ' | ' || lpad(v_tab_pars.HIGH_VALUE,80) || ' | ' || lpad(v_tab_pars.NUM_ROWS,14) || ' | ' || lpad(v_tab_pars.last_analyzed,13) || ' | ' || lpad(v_tab_pars.g,17) || ' |');
+    dbms_output.put_line('| '|| rpad(v_tab_pars.PARTITION_POSITION,8) || ' | ' || rpad(v_tab_pars.partition_name,17) || ' | ' || rpad(v_tab_pars.HIGH_VALUE,60) || ' | ' || lpad(v_tab_pars.NUM_ROWS,11) || ' | ' || lpad(v_tab_pars.last_analyzed,13) || ' | ' || lpad(v_tab_pars.g,17) || ' | ' || lpad(v_tab_pars.subpartition_cnt,11) ||  ' | ' || lpad(v_tab_pars.compression,11) || ' |');
     end loop;
-    dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_tab_partitions;
+
+
+  dbms_output.put_line('
+Partition Table Statistics Information');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| COLUMN_NAME          |' || ' NUM_ROWS      ' || '| CARDINALITY |' || ' SELECTIVITY ' || '| HISTOGRAM |' || ' NUM_BUCKETS ' || '|');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------');
+  open c_stats;
+    loop fetch c_stats into v_stats;
+    exit when c_stats%notfound;
+    dbms_output.put_line('| ' || rpad(v_stats.COLUMN_NAME,20) ||' | '|| rpad(v_stats.NUM_ROWS,13) || ' | '|| rpad(v_stats.CARDINALITY,11) || ' | '|| lpad(v_stats.SELECTIVITY || '%',11) || ' | '|| lpad(v_stats.HISTOGRAM,9) || ' | '|| lpad(v_stats.NUM_BUCKETS,12) || '|');
+    end loop;
+    dbms_output.put_line('----------------------------------------------------------------------------------------------');
+  close c_stats;
+
+  dbms_output.put_line('
+Partitioned Table Statistics STALE_STATS, Yes Means Expired');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('----------------------------------------------------------------------------------');
+  dbms_output.put_line('| PARTITION_NAME        |' || ' PARTITION_POSITION ' || '| STALE_STATS |' || ' LAST_ANALYZED       ' || '|');
+  dbms_output.put_line('----------------------------------------------------------------------------------');
+  open c_sta;
+    loop fetch c_sta into v_sta;
+    exit when c_sta%notfound;
+    dbms_output.put_line('| ' || lpad(v_sta.partition_name,21)|| ' | ' || lpad(v_sta.partition_position,18) || ' | ' ||lpad(v_sta.STALE_STATS,11) ||' | '|| v_sta.LAST_ANALYZED || ' |');
+    end loop;
+    dbms_output.put_line('----------------------------------------------------------------------------------');
+  close c_sta;
+
+
+  dbms_output.put_line('
+Partitione Table Modification Information(dba_tab_modifications)');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('-----------------------------------------------------------------------');
+  dbms_output.put_line('|'  || ' INSERTS          |' || ' UPDATES      ' || '| DELETES      |' || ' TIMESTAMP          ' || '|');
+  dbms_output.put_line('-----------------------------------------------------------------------');
+  open c_modi;
+    loop fetch c_modi into v_modi;
+    exit when c_modi%notfound;
+    dbms_output.put_line('| ' || lpad(v_modi.INSERTS,16) ||' | '|| lpad(v_modi.UPDATES,12) || ' | '|| lpad(v_modi.DELETES,12) || ' | '|| v_modi.TIMESTAMP || '|');
+    end loop;
+    dbms_output.put_line('-----------------------------------------------------------------------');
+  close c_modi;
+
+
+
+
 
 end if;
 end;

@@ -1,5 +1,1 @@
 
-23:44:07 sys@PROD1>@purge
-Enter value for sql_id: SP2-0642: SQL*Plus internal error state 2501, context 3:0:0
-Unsafe to proceed
-23:49:07 sys@PROD1>
