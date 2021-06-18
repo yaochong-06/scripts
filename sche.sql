@@ -1,3 +1,4 @@
+set linesize 300
 col window_name for A20
 col resource_plan for A30
 col schedule_owner for A20

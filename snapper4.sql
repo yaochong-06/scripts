@@ -1840,7 +1840,7 @@ begin
  
     if pagesize > 0 then
         output(' ');
-        output('-- Session Snapper v4.07 BETA - by Tanel Poder ( http://blog.tanelpoder.com ) - Enjoy the Most Advanced Oracle Troubleshooting Script on the Planet! :)');
+        output('-- Session Snapper v4.07 BETA - by Tanel Poder ( https://github.com/yaochong-06/scripts the Most Advanced Oracle Troubleshooting Script on the Planet! :)');
         output(' ');
     end if;
 
