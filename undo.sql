@@ -52,7 +52,7 @@ declare
 from
   sys.dba_segments, 
   sys.dba_rollback_segs
-where
+where dba_segments.bytes/1024/1024 > 10 and 
   dba_segments.segment_name = dba_rollback_segs.segment_name 
 order by sys.dba_rollback_segs.segment_id;
   v_seg c_seg%rowtype;
@@ -192,81 +192,6 @@ How long does it take to roll back(Minutes)');
     dbms_output.put_line('| There are no transactions that need to be rolled back at the moment.  ' || substr(SQLERRM,1,80) || '     |');
     dbms_output.put_line('------------------------------------------------------------------------------------------------------');
 end;
-/
-
-
-
-
- 
-TTitle left " " skip 2 - left "*** Database:  "dbname", Rollback Status ( As of:  " xdate " )  ***" skip 2 
-col "Rollback_Name" for a20
-col "WAITS" for a10
-col "XACTS" for a10
-col "WRAPS" for a10
-col "EXTENT" for a10
-
-select substr(V$rollname.NAME,1,10)   "Rollback_Name",
-       substr(V$rollstat.EXTENTS,1,6) "EXTENT",
-       v$rollstat.RSSIZE, 
-       v$rollstat.OPTSIZE,
-       v$rollstat.WRITES,
-       substr(v$rollstat.XACTS,1,6)   "XACTS",
-       v$rollstat.GETS,
-       substr(v$rollstat.WAITS,1,6)   "WAITS",
-       v$rollstat.HWMSIZE, 
-       v$rollstat.SHRINKS,
-       substr(v$rollstat.WRAPS,1,6)   "WRAPS",
-       round((sysdate-to_date(v$instance.startup_time))/(v$rollstat.writes/v$rollstat.rssize),1) "HOURS", 
-       substr(v$rollstat.EXTENDS,1,6) "EXTEND",
-       v$rollstat.AVESHRINK,
-       v$rollstat.AVEACTIVE
-from v$rollname, 
-     v$rollstat,
-     v$instance
-where v$rollname.USN = v$rollstat.USN
-order by v$rollname.USN;
- 
-ttitle off 
- 
-TTitle left " " skip 2 - left "*** Database:  "dbname", Rollback Segment Mapping ( As of:  "  xdate " ) ***" skip 2 
- 
-col "ROLLBACK_NAME" for a22
-
-select  r.name as "ROLLBACK_NAME",
-        p.pid ORACLE_PID, 
-        p.spid VMS_PID, 
-        nvl(p.username,'NO TRANSACTION') Transaction, 
-        p.terminal Terminal
-from v$lock l, 
-     v$process p, 
-     v$rollname r 
-where   l.addr = p.addr(+) 
-and     trunc(l.id1(+)/65536)=r.usn 
-and     l.type(+) = 'TX' 
-and     l.lmode(+) = 6 
-order by r.name; 
-
-ttitle off
-set linesize 400
-col OBJECT_NAME for a30
-col username for a15
-col status for a10
-col OBJECT_NAME for a30
-
-select  s.username,  s.sid,       rn.name,     rs.extents
-               ,rs.status,  t.used_ublk,  t.used_urec
-               ,do.object_name
-        from    v$transaction   t
-               ,v$session       s
-               ,v$rollname      rn
-               ,v$rollstat      rs
-               ,v$locked_object lo
-               ,dba_objects     do
-        where  t.addr        = s.taddr
-        and    t.xidusn      = rn.usn
-        and    rn.usn        = rs.usn
-        and    t.xidusn      = lo.xidusn(+)
-        and    do.object_id  = lo.object_id
 /
 
 

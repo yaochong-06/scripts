@@ -1,47 +1,108 @@
---Display the current locks
-col kaddr heading 'lock|address'
-col sid heading 'session id' format 9999999 
-col sp_id for a10
-col type heading 'lock|type' format a6
-col id1 heading 'id1' format a36
-col id2 heading 'id2' format 99999999
-col lmode heading 'lock mode' format 99999999
-col request heading 'req mode' format 99999999
-col blocking_sid format 999999 heading 'blocked | sessid'
-set verify off
-select /*+ rule */a.kaddr,a.sid as sid,to_char(d.spid) as sp_id,a.type,decode(a.type,'TM',E.OBJECT_NAME,A.ID1) as id1 ,a.id2,
-  a.lmode,a.request,a.block,b.sid blocking_sid
-from v$lock a,(
-  select * from v$lock
-  where request > 0
-  and type not in ('MR','AE','TO')
-) b,v$session c,v$process d,dba_objects e
-where a.id1 = b.id1(+) and a.id2 = b.id2(+)
-and a.id1 = e.object_id(+)
-and a.lmode > 0
-and a.type not in ('MR','AE','TO')
-and a.sid = c.sid
-and c.paddr = d.addr 
-/ 
 --Show the info of a session that hold the lock
+set linesize 300
 col spid format 99999
 col os_user_name format a20
 col object_name format a30
 col oracle_username format a15
 col locked_mode format a25
-
-select p.spid,a.object_name,s.sid,s.serial#,s.SQL_HASH_VALUE,l.oracle_username,l.os_user_name ,
-		decode(locked_mode,2,'sub share',3,'sub exclusive',4,'share',5,'share/sub exclusive',6,'exclusive',null) locked_mode
-from v$process p,v$session s, v$locked_object l,all_objects a 
-where 
-p.addr=s.paddr 
-and 
-s.process=l.process 
-and 
-a.object_id=l.object_id
-and
-s.sid = l.session_id
+col SID_AND_SERIAL# for a25
+col MACHINE for a15
+col OBJECT_NAME for a15
+select p.spid,
+       a.object_name,
+       s.sid || ',' || s.serial# as SID_AND_SERIAL#,
+       s.SQL_HASH_VALUE,
+       l.oracle_username,
+       l.os_user_name,
+       s.machine,
+       s.sql_id,
+       decode(locked_mode,2,'sub share',3,'sub exclusive',4,'share',5,'share/sub exclusive',6,'exclusive',null) locked_mode
+from v$process p,v$session s, v$locked_object l,dba_objects a 
+where p.addr=s.paddr 
+and s.process=l.process 
+and a.object_id=l.object_id
+and s.sid = l.session_id
 ;
-select sql_text from v$sql where hash_value in (select sql_hash_value from v$session where sid in (select session_id from v$locked_object));
 
-select 'kill -9 '||spid from v$process where addr in (select paddr from v$session where sid in ( select session_id from v$locked_object));
+column lt_type 		heading "TYPE"		format a4
+column lt_name		heading "LOCK_NAME"	format a30
+column lt_id1_tag	heading "ID1_MEANING"	format a25	word_wrap
+column lt_id2_tag	heading "ID2_MEANING"	format a25	word_wrap
+column lt_us_user	heading "USR"		format a3
+column lt_description	heading "DESCRIPTION"	format a60	word_wrap
+
+
+select
+        i       indx,
+        to_char(i, 'XXXX') hex,
+	type 	lt_type,
+	name 	lt_name,
+	id1_tag	lt_id1_tag,
+	id2_tag	lt_id2_tag,
+	is_user	lt_is_user,
+	description	lt_description
+from 
+	(select
+            rest.indx i, 
+            rest.resname type, 
+            rest.name name, 
+            rest.id1 id1_tag, 
+            rest.id2 id2_tag,
+            decode(bitand(eqt.flags,1), 1, 'YES', 'NO') is_user, 
+            rest.expl description
+            from X$KSIRESTYP rest, X$KSQEQTYP eqt    
+            where (rest.inst_id = eqt.inst_id) 
+            and   (rest.indx = eqt.indx)
+            and   (rest.indx > 0)
+);
+
+col b_res for a20
+col b_username a20
+col program for a20
+col machine for a20
+col service_name for a20
+col b_prev_sql_id for a20
+col w_username for a20
+col w_sql_id for a13
+col w_prev_sql_id for a13
+set linesize 3000
+/* I-AM-YUNQU-BUILTIN-SQL */select
+    b.type || '-' || b.id1 ||'-'|| b.id2 || case when b.type = 'TM' then (select '(' || owner || '.' || object_name || ')' from dba_objects where object_id = b.id1) else '' end as b_res,
+    s1.sid || ','|| s1.serial# || '@' || s1.inst_id as b_blocker,
+    (select count(*) from gv$lock t where t.type=b.type and t.id1 = b.id1 and t.id2 = b.id2 and request > 0) b_blocked_cnt,
+    b.request b_request,
+    b.lmode b_lmode,
+    s1.username b_username,
+    s1.sql_id b_sql_id,
+    s1.machine,
+    s1.program,
+    s1.module,
+    s1.service_name,
+    s1.prev_sql_id b_prev_sql_id,
+    b.ctime as b_ctime,
+    s2.sid || ','|| s2.serial# || '@' || s2.inst_id as w_waiter,
+    w.request w_request,
+    w.lmode w_lmode,
+    s2.username w_username,
+    s2.sql_id w_sql_id,
+    s2.prev_sql_id w_prev_sql_id,
+    w.ctime as w_ctime
+from
+    gv$lock b,
+    gv$lock w,
+    gv$session s1,
+    gv$session s2
+where
+    b.block > 0
+and w.request > 0
+and b.id1 = w.id1
+and b.id2 = w.id2
+and b.type = w.type
+and b.inst_id = s1.inst_id
+and b.sid = s1.sid
+and w.inst_id = s2.inst_id
+and w.sid = s2.sid
+and b.type in ('TM','TX')
+order by
+    b_res,
+    w_ctime desc;

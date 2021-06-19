@@ -1,3 +1,6 @@
+set linesize 400
+set pages 50
+set long 99999
 set verify off feedback off
 var hash_value varchar2(20)
 var sql_id varchar2(20)
@@ -43,12 +46,13 @@ from
 	dba_hist_sqlstat x
 where x.sql_id = :sql_id 
 order by x.snap_id;
-prompt current sql_id the CNT of executions
-select instance_number, EXECUTIONS_TOTAL from DBA_HIST_SQLSTAT where sql_id=:sql_id;
 
-col sql_sql_text head SQL_TEXT format a150 word_wrap
+
+col sql_id for a13
+col sql_text for a10
 col sql_child_number head CH# for 999
-
+col LAST_LOAD_TIME for a20
+col PARSING_SCHEMA_NAME for a20
 select
     sql_id,
     child_number ch#,
@@ -71,7 +75,7 @@ select
 	trunc(cpu_time/decode(executions,0,1,executions)/10000) "cpu_tm(cs)/exec",
 	trunc(buffer_gets/decode(executions,0,1,executions)) "gets/exec",
 	trunc(disk_reads/decode(executions,0,1,executions)) "reads/exec",
-    SQL_FULLTEXT
+    substr(SQL_TEXT,0,10) as sql_text
 from
     v$sql
 where
