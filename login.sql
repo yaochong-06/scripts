@@ -26,19 +26,18 @@ alter session set nls_date_format ='yyyy-mm-dd hh24:mi:ss';
 alter session set statistics_level=all;
 alter session set max_dump_file_size=unlimited;
 alter session set events '10046 trace name context forever, level 12';
-prompt alter session set statistics_level=all;
-prompt alter session set max_dump_file_size = UNLIMITED;
-prompt alter session set events '10046 trace name context forever, level 12';
-prompt alter session set events '10046 trace name context off';
-prompt alter session set events '10053 trace name context forever, level 1';
-prompt alter session set events '10053 trace name context off';
 SELECT lower(user) user_name,
        decode(instr(global_name,'.'),0,global_name,
               substr(global_name,1,instr(global_name,'.')-1 )) instance_name
   FROM global_name;
 SET SQLPROMPT '&user_name@&instance_name>'
 SET TERM ON
-
+prompt alter session set statistics_level=all;
+prompt alter session set max_dump_file_size = UNLIMITED;
+prompt alter session set events '10046 trace name context forever, level 12';
+prompt alter session set events '10046 trace name context off';
+prompt alter session set events '10053 trace name context forever, level 1';
+prompt alter session set events '10053 trace name context off';
 --add by chongzi
 
 spool ./log/sqlplus.log append

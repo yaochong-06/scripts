@@ -1,167 +1,202 @@
---desc:   query the undo info for the special session
+
+--desc:   query the undo infomation
 --usage:  @undo <chongzi>
 --author: chong yao
---date:	  Nov/30/2021
+--date:   Nov/30/2021
 
-prompt -----------------------------------------------------------------------------------------
+prompt Shows undo usage every 10 minutes since 24 hours ago...
 
-prompt |     shows active transaction,rollback segments imformation...                        |
-
-prompt -----------------------------------------------------------------------------------------
-
-col TABLESPACE_NAME for a20
-col username for A20
-select
-        vs.sid,
-        vs.serial#,
-        vs.username,
-        rn.name usn,
-        vt.start_time,
-        vt.log_io,
-        vt.phy_io,
-        vt.used_ublk,
-        vt.used_urec,
-        vt.recursive
-from
-v$transaction vt,
-v$session vs,
-v$rollname rn
-where vt.addr = vs.taddr
-and vt.xidusn = rn.usn
-/
-
-
-/*
-  This script shows undo usage every 10 minutes since 24 hours ago
-*/
-prompt -----------------------------------------------------------------------------------------
-
-prompt |     shows undo usage every 10 minutes since 24 hours ago...                          |
-
-prompt -----------------------------------------------------------------------------------------
-
-col mb for a20
+col undo_used_mb for a20
 col name for a30
+col END_TIME for a24
 col con_id for 9999
-set linesize 400
+set linesize 500
 set pages 100
 SELECT INST_ID,
        BEGIN_TIME,
        END_TIME,
-       TRUNC(UNDOBLKS * (SELECT VALUE
-                           FROM V$PARAMETER
-                          WHERE NAME = 'db_block_size'
-                            AND ROWNUM = 1) / 1024 / 1024,
-             2) || 'MB' AS MB
+       lpad(TRUNC(UNDOBLKS * (SELECT VALUE FROM V$PARAMETER WHERE NAME = 'db_block_size' AND ROWNUM = 1) / 1024 / 1024,
+             2) || 'MB',12) AS undo_used_mb
   FROM GV$UNDOSTAT
  WHERE BEGIN_TIME > SYSDATE - 1
  ORDER BY BEGIN_TIME;
 
-col Owner for A8
-col USN for 999
-col segment_type for A12
-
-select
-	dba_segments.owner,
-	dba_segments.tablespace_name,
-	dba_rollback_segs.segment_id USN,
-	dba_segments.segment_type,
-	dba_segments.segment_name,
---	dba_rollback_segs.initial_extent,
---	dba_rollback_segs.next_extent,
---	dba_segments.min_extents,
---	dba_segments.max_extents,
-	dba_segments.bytes,
-	dba_segments.extents,
-	dba_rollback_segs.status,
-	dba_rollback_segs.file_id,
-	dba_rollback_segs.block_id
-from
-	sys.dba_segments, 
-	sys.dba_rollback_segs
-where
-	sys.dba_segments.segment_name = sys.dba_rollback_segs.segment_name 
-order by
-	sys.dba_rollback_segs.segment_id; 
---dead transaction
-prompt show dead transaction...
-select distinct KTUXECFL,count(*) from x$ktuxe group by KTUXECFL;
-
-select ADDR,KTUXEUSN,KTUXESLT,KTUXESQN,KTUXESIZ from x$ktuxe where KTUXECFL = 'DEAD';
-
-
+set linesize 400
 set serveroutput on
-declare
- l_start number;
- l_end    number;
- begin
-   select ktuxesiz into l_start from x$ktuxe where (KTUXEUSN,KTUXESLT) in (select KTUXEUSN,KTUXESLT from x$ktuxe where  KTUXECFL ='DEAD');
-   dbms_lock.sleep(60);
-   select ktuxesiz into l_end from x$ktuxe where (KTUXEUSN,KTUXESLT) in (select KTUXEUSN,KTUXESLT from x$ktuxe where  KTUXECFL ='DEAD');
-   
-dbms_output.put_line('time est Hours:'|| round(l_end/(l_start -l_end)/60,2));
- exception
+set feedback off
+declare 
+  l_start    number;
+  l_end      number;
+  v_KTUXEUSN number;
+  v_KTUXESLT number;
+  cursor c_roll is select vs.sid || ',' || vs.serial# as sid, vs.username, rn.name roll_name, vt.start_time, vt.log_io, vt.phy_io, vt.used_ublk,
+        round(vt.used_ublk * (select value/1024/1024 from v$parameter where name='db_block_size' and ROWNUM = 1),2) as used_usize, vt.used_urec, vt.recursive
+  from
+  v$transaction vt,
+  v$session vs,
+  v$rollname rn
+  where vt.addr = vs.taddr
+  and vt.xidusn = rn.usn order by used_urec desc;
+  v_roll c_roll%rowtype;
+  
+  cursor c_seg is select
+  dba_segments.owner,
+  dba_segments.tablespace_name,
+  dba_rollback_segs.file_id,
+  dba_rollback_segs.segment_id,
+  dba_segments.segment_type,
+  dba_segments.segment_name,
+  round(dba_segments.bytes/1024/1024,2) as mb,
+  dba_segments.extents,
+  dba_rollback_segs.status
+from
+  sys.dba_segments, 
+  sys.dba_rollback_segs
+where
+  dba_segments.segment_name = dba_rollback_segs.segment_name 
+order by sys.dba_rollback_segs.segment_id;
+  v_seg c_seg%rowtype;
+  cursor c_t_stat is select KTUXECFL,count(*) as cnt from x$ktuxe group by KTUXECFL;
+  v_t_stat c_t_stat%rowtype;
+  
+  cursor c_trx is select 
+       r.usn as USN,
+       r.name rollback_Name,
+       q.sql_id,
+       case when s.sid is null then 'None' else s.sid || ',' || s.serial# end as sid_and_serial,
+       round(seg.bytes/1024/1024,2) as mb ,
+       seg.TABLESPACE_NAME,
+       l.addr as TADDR,
+        substr(q.sql_text,0,40) as sql_text
+  from v$lock l,
+     v$session s,
+     v$rollname r,
+     dba_segments seg,
+     v$sql q
+  where   l.addr = s.taddr(+)
+  and     trunc(l.id1(+)/65536)=r.usn
+  and     l.type(+) = 'TX'
+  and     l.lmode(+) = 6
+  and     r.name = seg.segment_name
+  and     s.sql_hash_value = q.hash_value
+  and     s.sql_address = q.address
+  and     seg.bytes > 1*1024*1024*1024
+  order by bytes desc;
+  v_trx c_trx%rowtype;
+
+  cursor c_ktu is SELECT KTUXEUSN USN,
+  KTUXESIZ,
+  KTUXESLT,
+  KTUXESQN,
+  KTUXESTA,
+  KTUXERDBF FILE_ID,
+  KTUXERDBB BLOCK_ID
+  FROM sys.x$KTUXE WHERE KTUXECFL = 'DEAD';
+
+  v_ktu c_ktu%rowtype;
+
+begin
+
+  dbms_output.put_line('
+Active transaction,rollback segments Information');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('|     sid_and_serial# |' || ' USERNAME      ' || '| ROLL_SEGMENT_NAME         |' || ' START_TIME        ' || '| LOGICAL_IO |' || ' PHYSICAL IO ' || '| USED_UBLK |' || ' USED_UNDO(MB) ' || '| used_urec |' || ' recursive ' || '|');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  open c_roll;
+    loop fetch c_roll into v_roll;
+    exit when c_roll%notfound;
+    dbms_output.put_line('| ' || lpad(v_roll.sid,19) ||' | '|| rpad(v_roll.username,13) || ' | ' || rpad(v_roll.roll_name,25) || ' | '|| rpad(v_roll.start_time,17) || ' | '|| lpad(v_roll.log_io,10) || ' | '|| lpad(v_roll.phy_io,11) || ' | '|| lpad(v_roll.used_ublk,9) || ' | '|| lpad(v_roll.used_usize,13) || ' | '|| lpad(v_roll.used_urec,9) || ' | '|| lpad(v_roll.recursive,10) || '|');
+    end loop;
+    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  close c_roll;
+
+
+
+   dbms_output.put_line('
+Rollback Segments Basic Status Information
+USN means Rollback Segments number');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| OWNER |' || ' TABLESPACE_NAME  ' || '| FILE# |' || ' USN        ' || '| SEGMENT_TYPE |' || ' ROLLBACK_SEGMENT_NAME                             ' || '| ROLLBACK_SEGMENT_SIZE(MB) |' || ' EXTENTS ' || '| STATUS    ' || '|');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  open c_seg;
+    loop fetch c_seg into v_seg;
+    exit when c_seg%notfound;
+    dbms_output.put_line('| ' || rpad(v_seg.owner,5) ||' | '|| rpad(v_seg.tablespace_name,16) || ' | ' || lpad(v_seg.file_id,5) || ' | '|| lpad(v_seg.segment_id,10) || ' | '|| rpad(v_seg.segment_type,12) || ' | '|| rpad(v_seg.segment_name,49) || ' | '|| lpad(v_seg.mb,25) || ' | '|| lpad(v_seg.extents,7) || ' | ' || rpad(v_seg.status,10) || '|');
+    end loop;
+    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  close c_seg;
+
+    dbms_output.put_line('
+Active Transaction Rollback Segments Information(rollback segment>1G per transaction desc)');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| USN |' || ' ROLLBACK_NAME   ' || '| SQL_ID        |' || '    SID_AND_SERIAL# ' || '| TRX_SIZE(MB) |' || ' TABLESPACE_NAME     ' || '| TADDR(v$session) |' || ' SQL_TEXT                                     ' || ' |');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  open c_trx;
+    loop fetch c_trx into v_trx;
+    exit when c_trx%notfound;
+    dbms_output.put_line('| ' || lpad(v_trx.USN,3) ||' | '|| rpad(v_trx.rollback_name,15) || ' | ' || lpad(v_trx.sql_id,13) || ' | '|| lpad(v_trx.sid_and_serial,18) || ' | '|| lpad(v_trx.mb,12) || ' | '|| rpad(v_trx.TABLESPACE_NAME,19) || ' | '|| lpad(v_trx.TADDR,16) || ' | ' || rpad(v_trx.SQL_TEXT,45) || ' |');
+    end loop;
+    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  close c_trx;
+   dbms_output.put_line('
+Transaction Status CNT Information(x$ktuxe)
+The ktuxecfl column means the Flag of Status, such as DEAD transaction');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('------------------------------------------');
+  dbms_output.put_line('| KTUXECFL             |' || '           COUNT ' || '|');
+  dbms_output.put_line('------------------------------------------');
+  open c_t_stat;
+    loop fetch c_t_stat into v_t_stat;
+    exit when c_t_stat%notfound;
+    dbms_output.put_line('| ' || rpad(v_t_stat.KTUXECFL,20) ||' | '|| lpad(v_t_stat.CNT,16) || '|');
+    end loop;
+    dbms_output.put_line('------------------------------------------');
+  close c_t_stat;
+
+
+   dbms_output.put_line('
+Dead Transaction Information(x$ktuxe)
+USN means Rollback Segments number
+KUTXESIZ means the remaining number of undo blocks required for rollback
+KTUXESLT means the transaction slot number
+KTUXESQN means the xid Sequence number
+KTUXESTA means the transaction status
+');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('|   USN |' || ' KTUXESIZ(BLOCK) ' || '| KTUXESLT   |' || ' KTUXESQN     ' || '| KTUXESTA(STATUS) |' || ' FILE_ID ' || '|        BLOCK_ID ' || '|');
+  dbms_output.put_line('------------------------------------------------------------------------------------------------------');
+  open c_ktu;
+    loop fetch c_ktu into v_ktu;
+    exit when c_ktu%notfound;
+    dbms_output.put_line('| ' || lpad(v_ktu.USN,5) ||' | '|| lpad(v_ktu.KTUXESIZ,15) || ' | ' || lpad(v_ktu.KTUXESLT,10) || ' | '|| lpad(v_ktu.KTUXESQN,12) || ' | '|| rpad(v_ktu.KTUXESTA,16) || ' | '|| lpad(v_ktu.FILE_ID,7) || ' | ' || lpad(v_ktu.BLOCK_ID,15) || ' |');
+    end loop;
+    dbms_output.put_line('------------------------------------------------------------------------------------------------------');
+  close c_ktu;
+  dbms_output.put_line('
+How long does it take to roll back(Minutes)');
+  dbms_output.put_line('======================');
+  select KTUXEUSN,KTUXESLT into v_KTUXEUSN,v_KTUXESLT from x$ktuxe where KTUXESIZ <>0 and ktuxecfl ='DEAD';
+  select ktuxesiz into l_start from x$ktuxe where KTUXEUSN = v_KTUXEUSN and KTUXESLT = v_KTUXESLT;
+  dbms_lock.sleep(60);
+  select ktuxesiz into l_end from x$ktuxe where KTUXEUSN = v_KTUXEUSN and KTUXESLT = v_KTUXESLT;
+    dbms_output.put_line('------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('| Estimated remaining Minutes: '|| round(l_end/(l_start -l_end)) || ' min' || '                    |'         );
+    dbms_output.put_line('------------------------------------------------------------------------------------------------------');
+  exception
    when others then
-      dbms_output.put_line(substr(SQLERRM,1,80));
- end; 
+    dbms_output.put_line('------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('| There are no transactions that need to be rolled back at the moment.  ' || substr(SQLERRM,1,80) || '     |');
+    dbms_output.put_line('------------------------------------------------------------------------------------------------------');
+end;
 /
 
--- 2G ITO
-
-col MinEx for a5
-col INI_Extent for a10
-select r.name Rollback_Name,
-       seg.bytes/1024/1024 "size(M)",
-       seg.TABLESPACE_NAME,
-       l.addr,
-       p.spid SPID,
-       nvl(p.username,'NO TRANSACTION') Transaction,
-       p.terminal Terminal
-from v$lock l,
-     v$process p,
-     v$rollname r,
-     dba_segments seg
-where   l.addr = p.addr(+)
-and     trunc(l.id1(+)/65536)=r.usn
-and     l.type(+) = 'TX'
-and     l.lmode(+) = 6
-and     r.name = seg.segment_name
-and	seg.bytes > 2*1024*1024*1024; --check any rollback segment > 2G, then trigger ITO
 
 
--- detail info for all rollback segments
-prompt show detail info for all rollback segments...
-set pagesize 66
-set line 200 
-col "ID#" for a10
-col "Owner" for a15
-col "Tablespace Name" for a15
-col "Rollback Name" for a15
-col "Next Exts" for a15
-col "Status" for a15
-col "Size (K)" for a10
-col "EXTEND" for a10
 
-TTitle left "*** Database:  "dbname", Rollback Information ( As of:  " xdate "  ) ***" skip 2 
- 
-select  substr(sys.dba_rollback_segs.SEGMENT_ID,1,5) "ID#", 
-        substr(sys.dba_segments.OWNER,1,8) "Owner", 
-        substr(sys.dba_segments.TABLESPACE_NAME,1,17) "Tablespace Name", 
-        substr(sys.dba_segments.SEGMENT_NAME,1,17) "Rollback Name", 
-        substr(sys.dba_rollback_segs.INITIAL_EXTENT,1,10) "INI_Extent",
-        substr(sys.dba_rollback_segs.NEXT_EXTENT,1,10) "Next Exts",
-        substr(sys.dba_segments.MIN_EXTENTS,1,5) "MinEx",
-        substr(sys.dba_segments.MAX_EXTENTS,1,5) "MaxEx",
-        substr(sys.dba_segments.BYTES/1024,1,15) "Size (K)", 
-        substr(sys.dba_segments.EXTENTS,1,6) "Extent#", 
-        substr(sys.dba_rollback_segs.STATUS,1,10) "Status" 
-from sys.dba_segments, 
-     sys.dba_rollback_segs
-where sys.dba_segments.segment_name = sys.dba_rollback_segs.segment_name 
-and   sys.dba_segments.segment_type = 'ROLLBACK' -- 'TYPE2 UNDO'
-order by sys.dba_rollback_segs.segment_id; 
- 
-ttitle off 
  
 TTitle left " " skip 2 - left "*** Database:  "dbname", Rollback Status ( As of:  " xdate " )  ***" skip 2 
 col "Rollback_Name" for a20

@@ -87,6 +87,7 @@ case when name = 'open_cursors' and (value < 300 or value > 1000) then 'open_cur
      when name = 'db_cache_size' and value = 0 then 'Recommend to set a minimum value'
      when name = 'shared_pool_size' and value = 0 then 'Recommend to set a minimum value'
      when name = 'pga_aggregate_target' and value < 100 then 'According to the business and system memory settings'
+     when name = 'fast_start_parallel_rollback' and value = 'FALSE' then '<FALSE> means Parallel rollback is disabled, <LOW> Limits the maximum degree of parallelism to 2 * CPU_COUNT'
 end as adivce 
 from v$parameter 
 where name in (
@@ -110,7 +111,8 @@ where name in (
 'sga_target',
 'sga_max_size',
 'memory_target',
-'memory_max_target'
+'memory_max_target',
+'fast_start_parallel_rollback'
 )
 order by name;
 --optimizer_adaptive_features=false

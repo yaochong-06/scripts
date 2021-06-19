@@ -68,9 +68,3 @@ and a.wait_class <> 'Idle'
 and a.sid not in (select sid from v$mystat where rownum = 1)
 order by LAST_CALL_ET desc
 /
-
-prompt Dead Transaction Information
-select distinct KTUXECFL,count(*) from x$ktuxe group by KTUXECFL;
-select ADDR,KTUXEUSN,KTUXESLT,KTUXESQN,KTUXESIZ, KTUXECFL from x$ktuxe where KTUXECFL ='DEAD'
-union
-select ADDR,KTUXEUSN,KTUXESLT,KTUXESQN,KTUXESIZ, KTUXECFL from x$ktuxe where KTUXESIZ > 1024;

@@ -8670,7 +8670,7 @@ if [ "$1" = "awrsq" ]; then
          eid=$defeid
     fi
    read -p "Please input        sql_id$defsql_id: " sql_id
-    if [ -z "${sql_id}"];then
+    if [ -z "${sql_id}" ];then
          sql_id=$defsql_id
     fi
 
