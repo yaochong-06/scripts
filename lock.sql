@@ -1,48 +1,20 @@
---Show the info of a session that hold the lock
-set linesize 300
-col spid format 99999
-col os_user_name format a20
-col object_name format a30
-col oracle_username format a15
-col locked_mode format a25
-col SID_AND_SERIAL# for a25
-col MACHINE for a15
-col OBJECT_NAME for a15
-select p.spid,
-       a.object_name,
-       s.sid || ',' || s.serial# as SID_AND_SERIAL#,
-       s.SQL_HASH_VALUE,
-       l.oracle_username,
-       l.os_user_name,
-       s.machine,
-       s.sql_id,
-       decode(locked_mode,2,'sub share',3,'sub exclusive',4,'share',5,'share/sub exclusive',6,'exclusive',null) locked_mode
-from v$process p,v$session s, v$locked_object l,dba_objects a 
-where p.addr=s.paddr 
-and s.process=l.process 
-and a.object_id=l.object_id
-and s.sid = l.session_id
-/
 
 
-col b_res for a20
-col b_username a20
-col program for a20
-col machine for a20
-col service_name for a20
-col b_prev_sql_id for a20
-col w_username for a20
-col w_sql_id for a13
-col w_prev_sql_id for a13
-set linesize 3000
-/* I-AM-YUNQU-BUILTIN-SQL */select
+
+
+set serveroutput on 
+set linesize 500
+set pages 0
+declare
+    /* I-AM-YUNQU-BUILTIN-SQL */
+    cursor c_lock is select
     b.type || '-' || b.id1 ||'-'|| b.id2 || case when b.type = 'TM' then (select '(' || owner || '.' || object_name || ')' from dba_objects where object_id = b.id1) else '' end as b_res,
     s1.sid || ','|| s1.serial# || '@' || s1.inst_id as b_blocker,
     (select count(*) from gv$lock t where t.type=b.type and t.id1 = b.id1 and t.id2 = b.id2 and request > 0) b_blocked_cnt,
     b.request b_request,
     b.lmode b_lmode,
     s1.username b_username,
-    s1.sql_id b_sql_id,
+    case when s1.sql_id is null then 'None' else s1.sql_id end as  b_sql_id,
     s1.machine,
     s1.program,
     s1.module,
@@ -75,3 +47,47 @@ and b.type in ('TM','TX')
 order by
     b_res,
     w_ctime desc;
+v_lock c_lock%rowtype;
+
+begin
+
+  dbms_output.put_line('
+Lock Information:
+BLOCKING_RESOURCE means the v$lock TYPE ID1 ID2 Information
+BLOCKING_SESSION  means the blocking_session sid_and_serial#@inst_id
+B_CNT             means the COUNT of waiting session
+B_SQL_ID          means then blocking_session SQL_ID
+B_PREV_SQL_ID     means the blocking_session PREV_SQL_ID
+B_RUN(S)          means the blocking_sql running seconds');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| BLOCKING_RESOURCE |' || ' BLOCKING_SESSION ' || '| B_CNT |' || ' LMODE ' || '| B_USERNAME |' || ' B_SQL_ID      ' || '| BLOCKING_MACHINE |' || ' BLOCKING_PROGRAM ' || '| B_PREV_SQL_ID |'  || ' B_RUN(S) '|| '| WAITER         |'  || ' W_USERNAME '|| '| W_SQL_ID      |'  || ' W_PREV_SQL_ID ' || '| W_RUN(S)' ||  ' |');
+  dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  open c_lock;
+    loop fetch c_lock into v_lock;
+    exit when c_lock%notfound;
+    dbms_output.put_line('| ' || rpad(v_lock.b_res,17) ||' | '|| lpad(v_lock.b_blocker,16) || ' | '|| lpad(v_lock.b_blocked_cnt,5) || ' | '|| lpad(v_lock.b_lmode,5) || ' | '|| lpad(v_lock.b_username,10) || ' | '|| lpad(v_lock.b_sql_id,13) ||  ' | '|| lpad(v_lock.machine,16) || ' | '|| lpad(v_lock.program,16) || ' | '|| lpad(v_lock.b_prev_sql_id,13) || ' | '|| lpad(v_lock.b_ctime,8) || ' | '|| lpad(v_lock.w_waiter,14) || ' | '|| lpad(v_lock.w_username,10) || ' | ' || lpad(v_lock.w_sql_id,13) || ' | '|| lpad(v_lock.w_prev_sql_id,13) || ' | '|| lpad(v_lock.w_ctime,9) || '|');
+    end loop;
+    dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  close c_lock;
+ 
+end;
+/
+--batch kill one user's session
+set serveroutput on size 100000;
+begin
+for x in (select 'ALTER SYSTEM disconnect SESSION ''' || sid || ',' || s.SERIAL# || ''' immediate;' cmd from v$session s where event like 'latch: cache buffers chains')
+loop
+	begin
+    execute immediate x.cmd;
+	dbms_output.put_line(x.cmd);
+	exception when others then null;
+	end;
+end loop;
+end;
+/
+
+--rollback dead lock
+SELECT 
+'ROLLBACK FORCE "' || p.local_tran_id || '";' 
+FROM dba_2pc_pending p WHERE p.state <> 'forced rollback';
