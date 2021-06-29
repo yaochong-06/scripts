@@ -1,4 +1,6 @@
 
+set   serveroutput   on   size   1000000
+
 --desc:   query the undo infomation
 --usage:  @undo <chongzi>
 --author: chong yao
@@ -52,7 +54,8 @@ declare
 from
   sys.dba_segments, 
   sys.dba_rollback_segs
-where dba_segments.bytes/1024/1024 > 10 and 
+where 
+  dba_segments.bytes/1024/1024 > 1 and -- only show > 1M 
   dba_segments.segment_name = dba_rollback_segs.segment_name 
 order by sys.dba_rollback_segs.segment_id;
   v_seg c_seg%rowtype;
@@ -61,7 +64,7 @@ order by sys.dba_rollback_segs.segment_id;
   
   cursor c_trx is select 
        r.usn as USN,
-       r.name rollback_Name,
+       r.name rollback_name,
        q.sql_id,
        case when s.sid is null then 'None' else s.sid || ',' || s.serial# end as sid_and_serial,
        round(seg.bytes/1024/1024,2) as mb ,

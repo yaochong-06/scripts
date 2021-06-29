@@ -1,4 +1,8 @@
+
+
 set linesize 3000
+select client_name,status from DBA_AUTOTASK_CLIENT;
+
 alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
 create table gather_stat_log(id number,owner varchar2(32),table_name varchar2(32),percent number,degree number,gmt_create date,log_type varchar2(10),content varchar2(100));
 alter table gather_stat_log add constraint pk_gather_stat_log primary key(id);
@@ -63,7 +67,7 @@ BEGIN
                                   TABNAME          => STALE.SEGMENT_NAME,
                                   ESTIMATE_PERCENT => STALE.PERCENT,
                                   METHOD_OPT       => 'for all columns size repeat',
-                                  DEGREE           => 8,
+                                  DEGREE           => 1,
                                   CASCADE          => TRUE);
     insert into gather_stat_log(id,owner,table_name,percent,degree,gmt_create,log_type) values(seq_gather_stat_log.nextval,STALE.OWNER,STALE.SEGMENT_NAME,STALE.PERCENT,8,sysdate,'info');
     commit;
@@ -105,8 +109,9 @@ to_char(START_DATE,'yyyy-mm-dd hh24:mi:ss') as start_date,
 to_char(END_DATE,'yyyy-mm-dd hh24:mi:ss') as end_date,
 ENABLED 
 from dba_scheduler_jobs where job_name like '%GATHER_STATIC_JOB%';
-
-prompt table statistics are locked
+prompt ***************************
+prompt Table Statistics are Locked
+prompt ***************************
 
 select owner,table_name,stattype_locked
 from dba_tab_statistics
@@ -114,8 +119,9 @@ where owner not in ('SYSTEM','OWBSYS','FLOWS_FILES','WMSYS','XDB','SYS','SCOTT',
                     'DBSNMP','APPQOSSYS','APEX_040200','AUDSYS','CTXSYS','APEX_030200','EXFSYS','OLAPSYS','SYSMAN','WH_SYNC','GSMADMIN_INTERNAL')
 and stattype_locked is not null 
 /
-
-prompt gather extended statistics
+prompt **************************
+prompt Gather Extended statistics
+prompt **************************
 
 select DBMS_STATS.REPORT_COL_USAGE(user, 'T_GAME_XYDC') from dual;
 begin
@@ -133,3 +139,88 @@ begin
     dbms_stats.gather_table_stats('BANK','FBBALANCE',method_opt=>'for all hidden columns size 254');
 end;
 /
+
+
+prompt ****************************************************
+prompt Statistics are Expired or last_analyzed > sysdate -7
+prompt ****************************************************
+col segment_name for a40
+col owner for a30
+SELECT OWNER,
+SEGMENT_NAME,
+CASE 
+WHEN SIZE_GB < 0.5 THEN 100 WHEN SIZE_GB >= 0.5 AND SIZE_GB < 1 THEN 80 
+WHEN SIZE_GB >= 1 AND SIZE_GB < 5 THEN 50 
+WHEN SIZE_GB >= 5 AND SIZE_GB < 10 THEN 30 
+WHEN SIZE_GB >= 10 THEN 10 END AS PERCENT, 
+1 AS DEGREE
+FROM (SELECT OWNER,SEGMENT_NAME,SUM(BYTES / 1024 / 1024 / 1024) SIZE_GB 
+      FROM DBA_SEGMENTS a 
+      WHERE (owner,SEGMENT_NAME) 
+      IN (
+SELECT /*+ UNNEST */ DISTINCT owner,TABLE_NAME  FROM DBA_TAB_STATISTICS 
+           WHERE (LAST_ANALYZED IS NULL OR STALE_STATS = 'YES' 
+--     OR last_analyzed < sysdate -7
+  ) 
+           AND OWNER not in('SYSTEM','WMSYS','XDB','SYS','SCOTT','QMONITOR','OUTLN','ORDSYS','ORDDATA','OJVMSYS','MDSYS','LBACSYS','DVSYS',
+                            'DBSNMP','APEX_040200','AUDSYS','CTXSYS','APEX_030200','EXFSYS','OLAPSYS','SYSMAN','WH_SYNC','GSMADMIN_INTERNAL','HZMCDBAGENT')            and TABLE_NAME not in ('PCASE','VTE_PADUA_INFO','VTE_CAPRINI_INFO','DOC_TYPE_DICT') 
+           AND stattype_locked is null
+)
+       and not exists (select null from dba_tables b where b.iot_type = 'IOT_OVERFLOW' and a.segment_name = b.table_name) 
+GROUP BY OWNER, SEGMENT_NAME);
+
+
+
+
+
+
+
+
+select q'[exec DBMS_STATS.GATHER_TABLE_STATS(OWNNAME=> ']' || OWNER || q'[',TABNAME=> ']' || SEGMENT_NAME || q'[',ESTIMATE_PERCENT =>]' || PERCENT || q'[,METHOD_OPT=> 'for all columns size auto',DEGREE=> 50,CASCADE => TRUE);]' as sql_command
+  from (
+  SELECT OWNER,
+        SEGMENT_NAME,
+             CASE
+               WHEN SIZE_GB < 0.5 THEN
+                30
+               WHEN SIZE_GB >= 0.5 AND SIZE_GB < 1 THEN
+                20
+               WHEN SIZE_GB >= 1 AND SIZE_GB < 5 THEN
+                10
+               WHEN SIZE_GB >= 5 AND SIZE_GB < 10 THEN
+                5
+               WHEN SIZE_GB >= 10 THEN
+                1
+             END AS PERCENT,
+             8 AS DEGREE
+        FROM (SELECT OWNER,
+                     SEGMENT_NAME,
+                     SUM(BYTES / 1024 / 1024 / 1024) SIZE_GB
+                FROM DBA_SEGMENTS a
+               WHERE (owner,SEGMENT_NAME) IN
+                     (SELECT /*+ UNNEST */
+                      DISTINCT owner,TABLE_NAME
+                        FROM DBA_TAB_STATISTICS
+                       WHERE  OWNER  in ('DWF')
+    and stattype_locked is null and last_analyzed < sysdate -1)
+               GROUP BY OWNER, SEGMENT_NAME)
+  order BY PERCENT);
+
+
+prompt **********************************************************
+prompt unlock table statistics from dbms_stats.unlock_table_stats
+prompt **********************************************************
+
+
+select q'[exec DBMS_STATS.UNLOCK_TABLE_STATS(OWNNAME=> ']' || OWNER || q'[',TABNAME=> ']' || SEGMENT_NAME  || q'[');]' as sql_command
+  from (SELECT OWNER,
+                     SEGMENT_NAME,
+                     SUM(BYTES / 1024 / 1024 / 1024) SIZE_GB
+                FROM DBA_SEGMENTS a
+               WHERE (owner,SEGMENT_NAME) IN
+                     (SELECT /*+ UNNEST */
+                      DISTINCT owner,TABLE_NAME
+                        FROM DBA_TAB_STATISTICS
+                       WHERE  OWNER  in ('SCOTT')
+    and stattype_locked is not null)
+               GROUP BY OWNER, SEGMENT_NAME);

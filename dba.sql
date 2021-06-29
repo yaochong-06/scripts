@@ -21,20 +21,22 @@
 --              CTRL+C here.
 --
 --------------------------------------------------------------------------------
-
+set linesize 300
 col rfile# new_value v_dba_rfile
 col block# new_value v_dba_block
 col dba_object head object for a40 truncate
 col dba_DBA head DBA for a20
 
+select owner,segment_name,segment_type,file_id,block_id from dba_extents where segment_name = upper('&object_name');
+
+
 
 select 
-	dbms_utility.data_block_address_file(to_number('&1','XXXXXXXX')) RFILE#, 
-	dbms_utility.data_block_address_block(to_number('&1','XXXXXXXX')) BLOCK# 
+	dbms_utility.data_block_address_file(to_number('&object_name','XXXXXXXX')) RFILE#,
+	dbms_utility.data_block_address_block(to_number('&object_name','XXXXXXXX')) BLOCK#
 from dual;
 
 pause Press enter to find the segment using V$BH (this may take CPU time), CTRL+C to cancel: 
-
 select  /*+ ORDERED */
         decode(bh.state,0,'free',1,'xcur',2,'scur',3,'cr',4,'read',5,'mrec',
              6,'irec',7,'write',8,'pi', 9,'memory',10,'mwrite',

@@ -113,12 +113,12 @@ begin
 Tablespace Used Information');
   dbms_output.put_line('======================');
   dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-  dbms_output.put_line('| TABLESPACE_NAME     |' || ' Used_Pct% ' || '|                 Used |' || ' AUTOEXTEND ' || '| TOTAL_GB |' || ' USED_GB ' || '| FREE_GB |' || ' FILE_CNT ' || '| STATUS |' || '  CONTENTS ' || '| EXTENT_MANAGEMENT |' || ' MAXSIZE(MB) ' || '|'); 
+  dbms_output.put_line('| TABLESPACE_NAME     |' || ' Used_Pct% ' || '|                 Used |' || ' AUTOEXTEND ' || '| TOTAL_GB |' || ' USED_GB ' || '| FREE_GB |' || ' FILE_CNT ' || '| STATUS |' || '  CONTENTS ' || '| EXTENT_MANAGE |' || ' MAXSIZE(MB) ' || '|'); 
   dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   open c_tbs;
     loop fetch c_tbs into v_tbs;
     exit when c_tbs%notfound;
-    dbms_output.put_line('| ' || rpad(v_tbs.TABLESPACE_NAME,19) ||' | '|| lpad(v_tbs.used_pct,9) || ' | '|| rpad(v_tbs.used,20) || ' | '|| lpad(v_tbs.autoextensible,10) || ' | '|| lpad(v_tbs.TOTAL_GB,8) || ' | '|| lpad(v_tbs.USED_GB,7) || ' | '|| lpad(v_tbs.FREE_GB,7) || ' | '|| lpad(v_tbs.DATAFILE_COUNT,8) || ' | '|| lpad(v_tbs.STATUS,6) || ' | '|| lpad(v_tbs.CONTENTS,9) || ' | '||lpad(v_tbs.extent_management,17) ||' | ' || lpad(v_tbs.maxsize,12) || '|');
+    dbms_output.put_line('| ' || rpad(v_tbs.TABLESPACE_NAME,19) ||' | '|| lpad(v_tbs.used_pct,9) || ' | '|| rpad(v_tbs.used,20) || ' | '|| lpad(v_tbs.autoextensible,10) || ' | '|| lpad(v_tbs.TOTAL_GB,8) || ' | '|| lpad(v_tbs.USED_GB,7) || ' | '|| lpad(v_tbs.FREE_GB,7) || ' | '|| lpad(v_tbs.DATAFILE_COUNT,8) || ' | '|| lpad(v_tbs.STATUS,6) || ' | '|| lpad(v_tbs.CONTENTS,9) || ' | '||lpad(v_tbs.extent_management,13) ||' | ' || lpad(v_tbs.maxsize,12) || '|');
     end loop;
     dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_tbs;
@@ -282,57 +282,4 @@ GROUP BY file_num
 HAVING MAX(extent_count) - MIN(extent_count) > 5
 ORDER BY disk_extents_imbalance DESC;
 
-col object_name format a32
-col owner format a15
-prompt Invalid object  
-prompt ================================================
-select owner,object_name,object_type,status from dba_objects where status <> 'VALID' and OBJECT_TYPE<>'MATERIALIZED VIEW'; 
-
-prompt Invalid indexes
-prompt ================================================
-select owner, index_name, 'N/A' part_name, table_name from dba_indexes
-where status <> 'VALID' and PARTITIONED<>'YES' and owner <> 'SYSTEM'
-union all
-select a.index_owner owner,a.index_name index_name,a.partition_name part_name,b.table_name
-from dba_ind_partitions a,dba_indexes b 
-where a.index_name=b.index_name and a.index_owner=b.owner and b.owner<>'SYSTEM' and a.status<>'USABLE'
-order by owner,index_name,part_name;
-
-
-prompt Partition Tables
-prompt ================================================ 
-prompt 
-set serveroutput on size 1000000 
-
-declare
-  v_high_value varchar2(100);
-begin
-        dbms_output.put_line(rpad('Table Owner',15)||rpad('Table Name',32)||rpad('Newest Partition Name',32)||rpad('High Value',32));
-        dbms_output.put_line(rpad('-',15,'-')||' '||rpad('-',31,'-')||' '||rpad('-',31,'-')||' '||rpad('-',31,'-'));
-        
-  for rs in (
-    select TABLE_OWNER,table_name,partition_name,high_value
-    from (
-      select TABLE_OWNER,table_name,partition_name,high_value,
-             row_number() over (partition by TABLE_OWNER,table_name order by partition_position desc) rn
-      from dba_tab_partitions
-      where high_value_length = 83
-    )
-    where rn = 1
-  ) loop
-    v_high_value := rs.high_value;
-    dbms_output.put_line(rpad(rs.TABLE_OWNER,15)||rpad(rs.table_name,32)||rpad(rs.partition_name,32)||substr(v_high_value,11,19));
-  end loop;
-end;
-/
-
-col  owner format a15
-col segname format a80
- 
-prompt big  index  segments(top 20) 
-prompt ================================================
-select  * from
- (select owner,nvl2(PARTITION_NAME,SEGMENT_NAME||'.'||PARTITION_NAME,SEGMENT_NAME) segname ,trunc(bytes/1024/1024) "size(M)"
- from dba_segments where segment_type like 'INDEX%' order by 3 desc)
- where  rownum < 21;
 

@@ -1,96 +1,18 @@
-
-
-
-prompt Show information about all the tables in the database and the tables you entered...
-
+set timing off
 set serveroutput on
 set feedback off
 set verify off
 set linesize 500
-col "less_2G%" for a9
-col "less_4G%" for a9
-col "less_6G%" for a9
-col "less_8G%" for a9
-col "less_10G%" for a9
-col "less_20G%" for a9
-col "less_30G%" for a9
-col "less_40G%" for a9
-col "less_50G%" for a9
-col "less_60G%" for a9
-col "less_70G%" for a9
-col "less_80G%" for a9
-col "less_90G%" for a9
-col "less_100G%" for a9
-col "more_100G%" for a9
-
-select
-less_than_2G || ' ' || round(less_than_2G/total*100,2)||'%' as "less_2G%",
-less_than_4G || ' ' || round(less_than_4G/total*100,2)||'%' as "less_4G%",
-less_than_6G || ' ' || round(less_than_6G/total*100,2)||'%' as "less_6G%",
-less_than_8G || ' ' || round(less_than_8G/total*100,2)||'%' as "less_8G%",
-less_than_10G || ' ' || round(less_than_10G/total*100,2)||'%' as "less_10G%",
-less_than_20G || ' ' || round(less_than_20G/total*100,2)||'%' as "less_20G%",
-less_than_30G || ' ' ||  round(less_than_30G/total*100,2)||'%' as "less_30G%",
-less_than_40G || ' ' ||  round(less_than_40G/total*100,2)||'%' as "less_40G%",
-less_than_50G || ' ' ||  round(less_than_50G/total*100,2)||'%' as "less_50G%",
-less_than_60G || ' ' ||  round(less_than_60G/total*100,2)||'%' as "less_60G%",
-less_than_70G || ' ' ||  round(less_than_70G/total*100,2)||'%' as "less_70G%",
-less_than_80G || ' ' ||  round(less_than_80G/total*100,2)||'%' as "less_80G%",
-less_than_90G || ' ' ||  round(less_than_90G/total*100,2)||'%' as "less_90G%",
-less_than_100G || ' ' ||  round(less_than_100G/total*100,2)||'%' as "less_100G%",
-greater_than_100G || ' ' ||  round(greater_than_100G/total*100,2)||'%' as "more_100G%"
-from
-(
-select
-        sum(case when seg_GB < 2 then 1 else 0 end) less_than_2G,
-        sum(case when seg_GB >= 2 and seg_GB < 4 then 1 else 0 end) less_than_4G,
-        sum(case when seg_GB >= 4 and seg_GB < 6 then 1 else 0 end) less_than_6G,
-        sum(case when seg_GB >= 6 and seg_GB < 8 then 1 else 0 end) less_than_8G,
-        sum(case when seg_GB >= 8 and seg_GB < 10 then 1 else 0 end) less_than_10G,
-        sum(case when seg_GB >= 10 and seg_GB  < 20 then 1 else 0 end) less_than_20G,
-        sum(case when seg_GB >= 20 and seg_GB  < 30 then 1 else 0 end) less_than_30G,
-        sum(case when seg_GB >= 30 and seg_GB  < 40 then 1 else 0 end) less_than_40G,
-        sum(case when seg_GB >= 40 and seg_GB  < 50 then 1 else 0 end) less_than_50G,
-        sum(case when seg_GB >= 50 and seg_GB  < 60 then 1 else 0 end) less_than_60G,
-        sum(case when seg_GB >= 60 and seg_GB  < 70 then 1 else 0 end) less_than_70G,
-        sum(case when seg_GB >= 70 and seg_GB  < 80 then 1 else 0 end) less_than_80G,
-        sum(case when seg_GB >= 80 and seg_GB  < 90 then 1 else 0 end) less_than_90G,
-        sum(case when seg_GB >= 90 and seg_GB  < 100 then 1 else 0 end) less_than_100G,
-        sum(case when seg_GB >= 100 then 1 else 0 end) greater_than_100G,
-        count(*) total
-from
-(
-select owner seg_owner,segment_name seg_segment_name,
-        partition_name seg_partition_name,
-        segment_type seg_segment_type,
-        tablespace_name seg_tablespace_name,
-        blocks,
-        round(bytes/1073741824,2) seg_GB,
-        header_file hdrfil,
-        HEADER_BLOCK hdrblk
-from
-        dba_segments
-where
-SEGMENT_TYPE='TABLE'
-and
-OWNER not in ('SYS', 'SYSTEM', 'DBSNMP','SYSMAN','OUTLN','MDSYS','ORDSYS','EXFSYS','DMSYS','WMSYS','CTXSYS','ANONYMOUS','XDB','ORDPLUGINS','OLAPSYS','PUBLIC')
-))
-/
-
-
-
 undefine table_name
 undefine owner
 var table_name varchar2(100);
 var owner varchar2(100);
-
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
 begin
-  :table_name := upper('&table_name');
   :owner :=upper('&owner');
+  :table_name := upper('&table_name');
 end;
 /
-
-
 declare
     v_cnt number;
     v_open_mode varchar2(100) :=null;
@@ -107,6 +29,15 @@ group by partition_name order by partition_name;
    AND A.TABLE_NAME = B.TABLE_NAME
    AND A.TABLE_NAME = upper(:table_name) and a.owner = upper(:owner) order by A.OWNER,A.COLUMN_NAME;
    v_stats c_stats%rowtype;
+
+   cursor c_hwm is SELECT table_name,ROUND((blocks * (select value from v$parameter where name='db_block_size'))/1024/1024, 2) "HWM",
+   ROUND ((num_rows * avg_row_len / 1024/ 1024 ), 2) as REAL_USED,
+   ROUND ((blocks * (select pct_free  from dba_tables where table_name = :table_name and rownum = 1) / 100) * 8 /1024, 2) "PCT_FREE",
+   ROUND ( (blocks * 8 - (num_rows * avg_row_len / 1024) - blocks * 8 * 10 / 100) /1024, 2) "WASTE_SPACE"
+   FROM dba_tables
+   WHERE temporary = 'N' and table_name = :table_name
+   ORDER BY 5 DESC;
+   v_hwm c_hwm%rowtype;
    
    cursor c_sta is select case when PARTITION_NAME is null then 'Current Table' else PARTITION_NAME end as PARTITION_NAME ,
                           case when PARTITION_POSITION is null then 'Current Table' else to_char(PARTITION_POSITION) end as PARTITION_POSITION,stale_stats,last_analyzed from dba_tab_statistics where owner = upper(:owner) and table_name = upper(:table_name);
@@ -130,6 +61,7 @@ group by partition_name order by partition_name;
    and table_name = upper(:table_name)
    order by t.partition_position;
    v_tab_pars c_tab_partitions%rowtype;
+
 
    cursor c_big_tab is select OWNER,SEGMENT_NAME,SIZE_MB from (select owner,nvl2(PARTITION_NAME,SEGMENT_NAME||'.'||PARTITION_NAME,SEGMENT_NAME) SEGMENT_NAME ,trunc(bytes/1024/1024) as SIZE_MB
    from dba_segments where segment_type like 'TABLE%' and owner  not in ('OWBSYS','FLOWS_FILES','WMSYS','XDB','QMONITOR','OUTLN',
@@ -194,6 +126,20 @@ Non partitioned Table Segment Information');
   close c_seg;
   
 
+  dbms_output.put_line('
+Non partitioned Table HWM Information basic Statistics');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('-----------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| HWM(MB)            |' || ' REAL_USED(MB)      ' || '| PCT_FREE_NEED_SPACE(MB)  |' || ' WASTE_SPACE(MB)        ' || '|');
+  dbms_output.put_line('-----------------------------------------------------------------------------------------------');
+  open c_hwm;
+    loop fetch c_hwm into v_hwm;
+    exit when c_hwm%notfound;
+    dbms_output.put_line('| ' || lpad(v_hwm.HWM,18) ||' | '|| lpad(v_hwm.REAL_USED,18) || ' | '|| lpad(v_hwm.PCT_FREE,24) || ' | '|| lpad(v_hwm.WASTE_SPACE,22) || ' |');
+    end loop;
+    dbms_output.put_line('-----------------------------------------------------------------------------------------------');
+  close c_hwm;
+
 
   dbms_output.put_line('
 Non partitioned Table Statistics Information');
@@ -204,7 +150,7 @@ Non partitioned Table Statistics Information');
   open c_stats;
     loop fetch c_stats into v_stats;
     exit when c_stats%notfound;
-    dbms_output.put_line('| ' || rpad(v_stats.COLUMN_NAME,20) ||' | '|| rpad(v_stats.NUM_ROWS,13) || ' | '|| rpad(v_stats.CARDINALITY,11) || ' | '|| lpad(v_stats.SELECTIVITY || '%',11) || ' | '|| lpad(v_stats.HISTOGRAM,9) || ' | '|| lpad(v_stats.NUM_BUCKETS,12) || '|');
+    dbms_output.put_line('| ' || rpad(v_stats.COLUMN_NAME,20) ||' | '|| lpad(v_stats.NUM_ROWS,13) || ' | '|| lpad(v_stats.CARDINALITY,11) || ' | '|| lpad(v_stats.SELECTIVITY || '%',11) || ' | '|| lpad(v_stats.HISTOGRAM,9) || ' | '|| lpad(v_stats.NUM_BUCKETS,12) || '|');
     end loop;
     dbms_output.put_line('----------------------------------------------------------------------------------------------');
   close c_stats;
@@ -303,12 +249,10 @@ Partitione Table Modification Information(dba_tab_modifications)');
   close c_modi;
 
 
-
-
-
 end if;
 end;
 /
+
 
 --Table stats
 
@@ -326,8 +270,6 @@ column TABLE_NAME heading "Tables owned by &Table_Owner" format a30
 undefine table_name
 undefine owner
 prompt
-accept owner prompt 'Please enter Name of Table Owner (Null = &Table_Owner): '
-accept table_name  prompt 'Please enter Table Name to show Statistics for: '
 column TABLE_NAME heading "Table|Name" format a15
 column PARTITION_NAME heading "Partition|Name" format a15
 column SUBPARTITION_NAME heading "SubPartition|Name" format a15
@@ -360,6 +302,30 @@ column USER_STATS heading "User|Stats" format a6
 column SAMPLE_SIZE heading "Sample|Size" format 99,999,990
 column to_char(t.last_analyzed,'MM-DD-YYYY') heading "Date|MM-DD-YYYY" format a10
 
+prompt **************************************************************
+prompt Show the Column Usage: Number of queries with different values
+prompt **************************************************************
+prompt
+
+SELECT c.name               as column_name,
+       cu.timestamp         as timestamp,
+       cu.equality_preds    as where_equal_search,
+       cu.equijoin_preds    as equal_join,
+       cu.nonequijoin_preds as none_equal_join,
+       cu.range_preds       as where_range_search,
+       cu.like_preds        as where_like_search,
+       cu.null_preds        as where_null_search
+FROM sys.col$ c, sys.col_usage$ cu, sys.obj$ o, sys.user$ u
+WHERE c.obj# = cu.obj# (+)
+AND c.intcol# = cu.intcol# (+)
+AND c.obj# = o.obj#
+AND o.owner# = u.user#
+AND o.name = :table_name
+AND u.name = :owner
+ORDER BY c.col#;
+
+
+
 prompt
 prompt ***********
 prompt Table Level
@@ -379,8 +345,8 @@ select
     to_char(t.last_analyzed,'MM-DD-YYYY')
 from dba_tables t
 where
-    owner = upper(nvl('&&Owner',user))
-and table_name = upper('&&Table_name')
+    owner = upper(nvl(:owner,user))
+and table_name = upper(:table_name)
 /
 select
     COLUMN_NAME,
@@ -409,8 +375,8 @@ select
     to_char(t.last_analyzed,'MM-DD-YYYY')
 from dba_tab_columns t
 where
-    table_name = upper('&Table_name')
-and owner = upper(nvl('&Owner',user))
+    table_name = :table_name
+and owner = upper(nvl(:owner,user))
 /
 col index_name for a30
 select
@@ -427,8 +393,8 @@ select
 from
     dba_indexes t
 where
-    table_name = upper('&Table_name')
-and table_owner = upper(nvl('&Owner',user))
+    table_name = :table_name
+and table_owner = :owner
 /
 break on index_name
 col index_name for a30
@@ -455,8 +421,8 @@ from
     dba_ind_columns i,
     dba_tab_columns t
 where
-    i.table_name = upper('&Table_name')
-and owner = upper(nvl('&Owner',user))
+    i.table_name = :table_name
+and owner = upper(nvl(:owner,user))
 and i.table_name = t.table_name
 and i.column_name = t.column_name
 order by index_name,column_position
@@ -466,7 +432,7 @@ prompt
 prompt ***************
 prompt Partition Level
 prompt ***************
-
+prompt dba_tab_partitions
 select
     PARTITION_NAME,
     NUM_ROWS,
@@ -482,18 +448,15 @@ select
 from
     dba_tab_partitions t
 where
-    table_owner = upper(nvl('&&Owner',user))
-and table_name = upper('&&Table_name')
+    table_owner = upper(nvl(:owner,user))
+and table_name = upper(:table_name)
 order by partition_position
 /
 
-
+prompt dba_part_col_statistics
 break on partition_name
-select
-    PARTITION_NAME,
-    COLUMN_NAME,
-    NUM_DISTINCT,
-    DENSITY,
+select PARTITION_NAME,
+    COLUMN_NAME,NUM_DISTINCT,DENSITY,
     NUM_BUCKETS,
     NUM_NULLS,
     GLOBAL_STATS,
@@ -503,31 +466,21 @@ select
 from
     dba_PART_COL_STATISTICS t
 where
-    table_name = upper('&Table_name')
-and owner = upper(nvl('&Owner',user))
+    table_name = :table_name
+and owner = upper(nvl(:owner,user))
 /
 
+
+prompt dba_ind_partitions, dba_indexes
 break on partition_name
 select
-    t.INDEX_NAME,
-    t.PARTITION_NAME,
-    t.BLEVEL BLev,
-    t.LEAF_BLOCKS,
-    t.DISTINCT_KEYS,
-    t.NUM_ROWS,
-    t.AVG_LEAF_BLOCKS_PER_KEY,
-    t.AVG_DATA_BLOCKS_PER_KEY,
-    t.CLUSTERING_FACTOR,
-    t.GLOBAL_STATS,
-    t.USER_STATS,
-    t.SAMPLE_SIZE,
-    to_char(t.last_analyzed,'MM-DD-YYYY')
+ t.INDEX_NAME,t.PARTITION_NAME,t.BLEVEL BLev,t.LEAF_BLOCKS,t.DISTINCT_KEYS,t.NUM_ROWS,t.AVG_LEAF_BLOCKS_PER_KEY,
+ t.AVG_DATA_BLOCKS_PER_KEY,t.CLUSTERING_FACTOR,t.GLOBAL_STATS,t.USER_STATS,t.SAMPLE_SIZE,to_char(t.last_analyzed,'MM-DD-YYYY')
 from
-    dba_ind_partitions t,
-    dba_indexes i
+    dba_ind_partitions t,dba_indexes i
 where
-    i.table_name = upper('&Table_name')
-and i.table_owner = upper(nvl('&Owner',user))
+    i.table_name = upper(:table_name)
+and i.table_owner = upper(nvl(:owner,user))
 and i.owner = t.index_owner
 and i.index_name=t.index_name
 /
@@ -537,78 +490,152 @@ prompt
 prompt ***************
 prompt SubPartition Level
 prompt ***************
-
+prompt dba_tab_subpartitions
 select
-    PARTITION_NAME,
-    SUBPARTITION_NAME,
-    NUM_ROWS,
-    BLOCKS,
-    EMPTY_BLOCKS,
-    AVG_SPACE,
-    CHAIN_CNT,
-    AVG_ROW_LEN,
-    GLOBAL_STATS,
-    USER_STATS,
-    SAMPLE_SIZE,
-    to_char(t.last_analyzed,'MM-DD-YYYY')
+ PARTITION_NAME,SUBPARTITION_NAME,NUM_ROWS,BLOCKS,EMPTY_BLOCKS,AVG_SPACE,CHAIN_CNT,
+ AVG_ROW_LEN,GLOBAL_STATS,USER_STATS,SAMPLE_SIZE,to_char(t.last_analyzed,'MM-DD-YYYY')
 from
     dba_tab_subpartitions t
 where
-    table_owner = upper(nvl('&&Owner',user))
-and table_name = upper('&&Table_name')
+    table_owner = upper(nvl(:owner,user))
+and table_name = upper(:table_name)
 order by SUBPARTITION_POSITION
 /
 break on partition_name
+
+prompt dba_tab_subpartitions,dba_subpart_col_statistics
 select
-    p.PARTITION_NAME,
-    t.SUBPARTITION_NAME,
-    t.COLUMN_NAME,
-    t.NUM_DISTINCT,
-    t.DENSITY,
-    t.NUM_BUCKETS,
-    t.NUM_NULLS,
-    t.GLOBAL_STATS,
-    t.USER_STATS,
-    t.SAMPLE_SIZE,
-    to_char(t.last_analyzed,'MM-DD-YYYY')
+ p.PARTITION_NAME,t.SUBPARTITION_NAME,t.COLUMN_NAME,t.NUM_DISTINCT,t.DENSITY,
+ t.NUM_BUCKETS,t.NUM_NULLS,t.GLOBAL_STATS,t.USER_STATS,t.SAMPLE_SIZE,to_char(t.last_analyzed,'MM-DD-YYYY')
 from
-    dba_SUBPART_COL_STATISTICS t,
-    dba_tab_subpartitions p
+    dba_SUBPART_COL_STATISTICS t,dba_tab_subpartitions p
 where
-    t.table_name = upper('&Table_name')
-and t.owner = upper(nvl('&Owner',user))
+    t.table_name = :table_name
+and t.owner = upper(nvl(:owner,user))
 and t.subpartition_name = p.subpartition_name
 and t.owner = p.table_owner
 and t.table_name=p.table_name
 /
 
+prompt dba_ind_subpartitions,dba_indexes
 break on partition_name
 select
-    t.INDEX_NAME,
-    t.PARTITION_NAME,
-    t.SUBPARTITION_NAME,
-    t.BLEVEL BLev,
-    t.LEAF_BLOCKS,
-    t.DISTINCT_KEYS,
-    t.NUM_ROWS,
-    t.AVG_LEAF_BLOCKS_PER_KEY,
-    t.AVG_DATA_BLOCKS_PER_KEY,
-    t.CLUSTERING_FACTOR,
-    t.GLOBAL_STATS,
-    t.USER_STATS,
-    t.SAMPLE_SIZE,
-    to_char(t.last_analyzed,'MM-DD-YYYY')
+  t.INDEX_NAME,t.PARTITION_NAME,t.SUBPARTITION_NAME,t.BLEVEL BLev,t.LEAF_BLOCKS,t.DISTINCT_KEYS,t.NUM_ROWS,t.AVG_LEAF_BLOCKS_PER_KEY,
+ t.AVG_DATA_BLOCKS_PER_KEY,t.CLUSTERING_FACTOR,t.GLOBAL_STATS,t.USER_STATS,t.SAMPLE_SIZE,to_char(t.last_analyzed,'MM-DD-YYYY')
 from
-    dba_ind_subpartitions t,
-    dba_indexes i
+    dba_ind_subpartitions t,dba_indexes i
 where
-    i.table_name = upper('&Table_name')
-and i.table_owner = upper(nvl('&Owner',user))
+    i.table_name = :table_name
+and i.table_owner = upper(nvl(:owner,user))
 and i.owner = t.index_owner
 and i.index_name=t.index_name
 /
 
-clear breaks
-set echo on
+prompt *************************
+prompt the table segment bh info
+prompt *************************
 
+col dba_object head object for a12 truncate
+
+select block_class, object_type, dba_object, tch, dirty, count(*)
+from
+(select  /*+ ORDERED */
+        decode(bh.class,1,'data block',2,'sort block',3,'save undo block',
+               4,'segment header',5,'save undo header',6,'free list',7,'extent map',
+               8,'1st level bmb',9,'2nd level bmb',10,'3rd level bmb', 11,'bitmap block',
+               12,'bitmap index block',13,'file header block',14,'unused',
+               15,'system undo header',16,'system undo block', 17,'undo header',
+               18,'undo block'
+        ) block_class,
+        o.object_type,
+        o.owner||'.'||o.object_name             dba_object,
+        bh.tch,
+        decode(mod(flag, 2), 1, 'Y', 'N') dirty
+from
+        x$bh            bh,
+        dba_objects     o
+where
+        bh.obj = o.data_object_id
+and     o.data_object_id in
+        (select data_object_id
+          from dba_objects
+         where object_name = :table_name and owner = :owner
+        ))
+group by block_class, object_type, dba_object, tch, dirty
+order by count(*);
+
+
+
+prompt Show the overall situation of table size ...
+
+
+col "less_2G%" for a9
+col "less_4G%" for a9
+col "less_6G%" for a9
+col "less_8G%" for a9
+col "less_10G%" for a9
+col "less_20G%" for a9
+col "less_30G%" for a9
+col "less_40G%" for a9
+col "less_50G%" for a9
+col "less_60G%" for a9
+col "less_70G%" for a9
+col "less_80G%" for a9
+col "less_90G%" for a9
+col "less_100G%" for a9
+col "more_100G%" for a9
+
+select
+less_than_2G || ' ' || round(less_than_2G/total*100,2)||'%' as "less_2G%",
+less_than_4G || ' ' || round(less_than_4G/total*100,2)||'%' as "less_4G%",
+less_than_6G || ' ' || round(less_than_6G/total*100,2)||'%' as "less_6G%",
+less_than_8G || ' ' || round(less_than_8G/total*100,2)||'%' as "less_8G%",
+less_than_10G || ' ' || round(less_than_10G/total*100,2)||'%' as "less_10G%",
+less_than_20G || ' ' || round(less_than_20G/total*100,2)||'%' as "less_20G%",
+less_than_30G || ' ' ||  round(less_than_30G/total*100,2)||'%' as "less_30G%",
+less_than_40G || ' ' ||  round(less_than_40G/total*100,2)||'%' as "less_40G%",
+less_than_50G || ' ' ||  round(less_than_50G/total*100,2)||'%' as "less_50G%",
+less_than_60G || ' ' ||  round(less_than_60G/total*100,2)||'%' as "less_60G%",
+less_than_70G || ' ' ||  round(less_than_70G/total*100,2)||'%' as "less_70G%",
+less_than_80G || ' ' ||  round(less_than_80G/total*100,2)||'%' as "less_80G%",
+less_than_90G || ' ' ||  round(less_than_90G/total*100,2)||'%' as "less_90G%",
+less_than_100G || ' ' ||  round(less_than_100G/total*100,2)||'%' as "less_100G%",
+greater_than_100G || ' ' ||  round(greater_than_100G/total*100,2)||'%' as "more_100G%"
+from
+(
+select
+        sum(case when seg_GB < 2 then 1 else 0 end) less_than_2G,
+        sum(case when seg_GB >= 2 and seg_GB < 4 then 1 else 0 end) less_than_4G,
+        sum(case when seg_GB >= 4 and seg_GB < 6 then 1 else 0 end) less_than_6G,
+        sum(case when seg_GB >= 6 and seg_GB < 8 then 1 else 0 end) less_than_8G,
+        sum(case when seg_GB >= 8 and seg_GB < 10 then 1 else 0 end) less_than_10G,
+        sum(case when seg_GB >= 10 and seg_GB  < 20 then 1 else 0 end) less_than_20G,
+        sum(case when seg_GB >= 20 and seg_GB  < 30 then 1 else 0 end) less_than_30G,
+        sum(case when seg_GB >= 30 and seg_GB  < 40 then 1 else 0 end) less_than_40G,
+        sum(case when seg_GB >= 40 and seg_GB  < 50 then 1 else 0 end) less_than_50G,
+        sum(case when seg_GB >= 50 and seg_GB  < 60 then 1 else 0 end) less_than_60G,
+        sum(case when seg_GB >= 60 and seg_GB  < 70 then 1 else 0 end) less_than_70G,
+        sum(case when seg_GB >= 70 and seg_GB  < 80 then 1 else 0 end) less_than_80G,
+        sum(case when seg_GB >= 80 and seg_GB  < 90 then 1 else 0 end) less_than_90G,
+        sum(case when seg_GB >= 90 and seg_GB  < 100 then 1 else 0 end) less_than_100G,
+        sum(case when seg_GB >= 100 then 1 else 0 end) greater_than_100G,
+        count(*) total
+from
+(
+select owner seg_owner,segment_name seg_segment_name,
+        partition_name seg_partition_name,
+        segment_type seg_segment_type,
+        tablespace_name seg_tablespace_name,
+        blocks,
+        round(bytes/1073741824,2) seg_GB,
+        header_file hdrfil,
+        HEADER_BLOCK hdrblk
+from
+        dba_segments
+where
+SEGMENT_TYPE='TABLE'
+and
+OWNER not in ('SYS', 'SYSTEM', 'DBSNMP','SYSMAN','OUTLN','MDSYS','ORDSYS','EXFSYS','DMSYS','WMSYS','CTXSYS','ANONYMOUS','XDB','ORDPLUGINS','OLAPSYS','PUBLIC')
+))
+/
 

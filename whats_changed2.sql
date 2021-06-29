@@ -1,4 +1,5 @@
 col sql_id for A15
+set verify off
 col executions_delta for 99999999
 col elp_time_per_exec for 99999999
 col cpu_time_per_execfor 99999999
@@ -31,7 +32,8 @@ from
         round(sum(x.cpu_time_delta)/decode(sum(x.executions_delta),0,1,sum(x.executions_delta))/1000000, 1) cpu_time_per_exec,
         round(sum(x.rows_processed_delta)/decode(sum(x.executions_delta),0,1,sum(x.executions_delta)), 1) rows_per_exec,
         trunc(sum(x.buffer_gets_delta)/decode(sum(x.executions_delta),0,1,sum(x.executions_delta))) lio_per_exec,
-        trunc(sum(x.disk_reads_delta)/decode(sum(x.executions_delta),0,1,sum(x.executions_delta))) disk_per_exec
+        trunc(sum(x.disk_reads_delta)/decode(sum(x.executions_delta),0,1,sum(x.executions_delta))) disk_per_exec,
+        x.PARSING_SCHEMA_NAME
     from
         dba_hist_sqlstat x,
         dba_hist_snapshot s
@@ -39,11 +41,11 @@ from
         s.instance_number=x.instance_number
     and s.snap_id = x.snap_id
     and s.begin_interval_time > sysdate - nvl(to_number('&Days'),7)
-    group by x.sql_id, x.plan_hash_value
+    group by x.sql_id, x.plan_hash_value,x.PARSING_SCHEMA_NAME
     ) base
 )
-where
-    max_elp_time_per_exec > nvl(to_number('&elp_time_per_exec'), 0.1)
+where PARSING_SCHEMA_NAME
+and max_elp_time_per_exec > nvl(to_number('&elp_time_per_exec'), 0.1)
 and cnt > 1
 order by max_elp_time_per_exec, elp_time_per_exec
 /

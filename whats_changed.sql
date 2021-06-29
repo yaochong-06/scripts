@@ -105,7 +105,6 @@ and ss.instance_number = S.instance_number
 and executions_delta > 0
 and elapsed_time_delta > 0
 and ss.begin_interval_time > sysdate-&&days_ago
--- and s.snap_id >  7113
 )
 group by sql_id, period_flag
 )

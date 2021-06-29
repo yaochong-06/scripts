@@ -1,13 +1,25 @@
 --Show DDL of procedure or view
-prompt Show DDL of procedure or view,Type The Procedure or View Name
+prompt Show DDL of procedure, view,table, index or synonym
 set long 10000
+set timing off
 set feedback off
+set verify off
+set linesize 300
+set pages 0
 var object_name varchar2(200)
 begin
   :object_name := upper('&object_name');
 end;
 /
-set pages 0
+
+prompt show the owner object_type information...
+select 'OWNER        ','OBJECT_TYPE  ' from dual
+union all
+select '-------------','-------------' from dual
+union all
+select owner,object_type from dba_objects where object_name = :object_name;
+set feedback off
+
 select text from dba_source where name = :object_name
 /
 select text from dba_views where view_name = :object_name
@@ -17,9 +29,12 @@ select view_definition from v$fixed_View_definition where view_name = :object_na
 
 select QUERY from dba_mviews where mview_name = :object_name
 /
+select * from dba_synonyms where synonym_name = :object_name
+/
 
 exec dbms_metadata.set_transform_param( dbms_metadata.session_transform,'SQLTERMINATOR', TRUE);
 
+prompt t
 select
 dbms_metadata.get_ddl(
 case when object_type like 'PACKAGE%' then 'PACKAGE' 
@@ -97,7 +112,7 @@ where table_name = :object_name
 
 col schema_user format a10
 col what format a50
-select job, next_date, failures, broken, schema_user, what from dba_jobs where job =:object_name;
+select job, next_date, failures, broken, schema_user, what from dba_jobs;
 
 
 
@@ -108,4 +123,7 @@ from dba_triggers t, dba_source s
 where
 t.owner = s.owner
 and t.trigger_name = s.name
-and t.table_name = upper(:table_name);
+and t.table_name = upper(:object_name);
+
+set feedback on
+set timing on

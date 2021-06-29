@@ -1,7 +1,7 @@
 -- display the latch statistics for each row cache
 
 col cache# for 99 heading C#
-col parameter for A25
+col parameter for A32
 col type for A12
 col subordinate# for 99 heading S#
 col modifications for 9999 heading modi#

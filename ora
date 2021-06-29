@@ -2400,7 +2400,7 @@ if [ "$1" = "iostat" -o "$1" = "batch_iostat" ]; then
 
     connect $DBUSER
 
-    set linesize 200 pagesize 8
+    set linesize 200 pagesize 50
     col filename format a120
     col inst_id format 9999
     col tsname format a20 trunc

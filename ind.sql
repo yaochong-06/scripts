@@ -1,13 +1,6 @@
-
-
-
-
-
-
-
-
-
 set serveroutput on 
+set verify off
+set timing off
 set linesize 500
 set pages 0
 
@@ -22,7 +15,7 @@ begin
 end;
 /
 
-
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
 declare
     cursor c_i is SELECT A.INDEX_NAME,A.COLUMN_NAME,A.COLUMN_POSITION,decode(b.TABLESPACE_NAME,null,'None',B.TABLESPACE_NAME) as TABLESPACE_NAME,B.INDEX_TYPE,B.DEGREE,
        round(C.BYTES / 1024 / 1024) AS INDEX_MB,
@@ -102,12 +95,12 @@ begin
 Index Information(contains Global and Local index)');
   dbms_output.put_line('======================');
   dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-  dbms_output.put_line('| INDEX_NAME         |' || ' COLUMN_NAME        ' || '| COLUMN_POSITION |' || ' TABLESPACE_NAME ' || '| INDEX_TYPE |' || ' DEGREE ' || '| INDEX_MB |' || ' DESCEND ' || '| USABLE |'  || ' LAST_ANALYZED '|| '| VISIABLE |'  || ' UNIQUENESS '|| '|');
+  dbms_output.put_line('| INDEX_NAME             |' || ' COLUMN_NAME    ' || '| COLUMN_POSITION |' || ' TABLESPACE_NAME ' || '| INDEX_TYPE |' || ' DEGREE ' || '| INDEX_MB |' || ' DESCEND ' || '| USABLE |'  || ' LAST_ANALYZED '|| '| VISIABLE |'  || ' UNIQUENESS '|| '|');
   dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   open c_i;
     loop fetch c_i into v_i;
     exit when c_i%notfound;
-    dbms_output.put_line('| ' || rpad(v_i.INDEX_NAME,18) ||' | '|| rpad(v_i.COLUMN_NAME,18) || ' | '|| lpad(v_i.COLUMN_POSITION,15) || ' | '|| lpad(v_i.TABLESPACE_NAME,15) || ' | '|| lpad(v_i.INDEX_TYPE,10) || ' | '|| lpad(v_i.DEGREE,6) ||  ' | '|| lpad(v_i.INDEX_MB,8) || ' | '|| lpad(v_i.DESCEND,7) || ' | '|| lpad(v_i.USABLE,6) || ' | '|| lpad(v_i.LAST_ANALYZED,13) || ' | '|| lpad(v_i.visibility,8) || ' | '|| lpad(v_i.UNIQUENESS,11) ||'|');
+    dbms_output.put_line('| ' || rpad(v_i.INDEX_NAME,22) ||' | '|| rpad(v_i.COLUMN_NAME,14) || ' | '|| lpad(v_i.COLUMN_POSITION,15) || ' | '|| lpad(v_i.TABLESPACE_NAME,15) || ' | '|| lpad(v_i.INDEX_TYPE,10) || ' | '|| lpad(v_i.DEGREE,6) ||  ' | '|| lpad(v_i.INDEX_MB,8) || ' | '|| lpad(v_i.DESCEND,7) || ' | '|| lpad(v_i.USABLE,6) || ' | '|| lpad(v_i.LAST_ANALYZED,13) || ' | '|| lpad(v_i.visibility,8) || ' | '|| lpad(v_i.UNIQUENESS,11) ||'|');
     end loop;
     dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_i;
@@ -149,15 +142,104 @@ end;
 /
 
 
+col owner for a20
+col index_name for a30
+
+prompt Invalid indexes
+prompt ================================================
+select owner, index_name, 'N/A' partition_name, table_name 
+from dba_indexes
+where status <> 'VALID' and PARTITIONED<>'YES' and owner <> 'SYSTEM'
+union all
+select a.index_owner owner,a.index_name index_name,a.partition_name partition_name,b.table_name
+from dba_ind_partitions a,dba_indexes b
+where a.index_name=b.index_name and a.index_owner=b.owner and b.owner<>'SYSTEM' and a.status<>'USABLE'
+order by owner,index_name,partition_name;
 
 
 
 
 
- 
+prompt **********************************************************************************************
+prompt show Constraint(constraint_type <> 'R') such as Primary Key/Check/Unique Key for the table ...
+prompt **********************************************************************************************
+select
+'select dbms_metadata.get_ddl(''CONSTRAINT'','''|| co.constraint_name || ''',''' || co.owner || ''') from dual;' cons_ddl
+from
+     dba_constraints co,
+     dba_cons_columns cc
+where
+    co.owner              = cc.owner
+and co.table_name         = cc.table_name
+and co.constraint_name    = cc.constraint_name
+and co.constraint_type    <> 'R'
+and co.table_name = :table_name
+AND co.owner = :owner
+order by
+     co.owner,
+     co.table_name,
+     co.constraint_type,
+     co.constraint_name
+/
 
+select
+        dbms_metadata.get_ddl('CONSTRAINT',co.constraint_name,co.owner) cons_ddl
+from
+     dba_constraints co,
+     dba_cons_columns cc
+where
+    co.owner              = cc.owner
+and co.table_name         = cc.table_name
+and co.constraint_name    = cc.constraint_name
+and co.constraint_type    <> 'R'
+and co.table_name = :table_name
+AND co.owner = :owner
+order by
+     co.owner,
+     co.table_name,
+     co.constraint_type,
+     co.constraint_name
+/
 
+prompt ******************************************************************
+prompt show Constraint(constraint_type='R') Foreign key for the table ...
+prompt ******************************************************************
+select
+        dbms_metadata.get_ddl('REF_CONSTRAINT',co.constraint_name,co.owner) cons_ddl
+from
+     dba_constraints co,
+     dba_cons_columns cc
+where
+    co.owner              = cc.owner
+and co.table_name         = cc.table_name
+and co.constraint_name    = cc.constraint_name
+and co.constraint_type    = 'R'
+and co.table_name = :table_name
+AND co.owner = :owner
+order by
+     co.owner,
+     co.table_name,
+     co.constraint_type,
+     co.constraint_name
+/
 
+prompt ************************************
+prompt show the constraints of the Table...
+prompt ************************************
+col owner format a12
+col column_name format a18
+col constraint_type format a10
+col table_name format a25
+col index_name format a25
+set serveroutput off
+set verify on
+set timing off
+
+select a.owner,a.table_name,a.constraint_name,b.column_name,lpad(a.constraint_type,10) as constraint_type,a.index_name,a.status
+from all_constraints a,all_cons_columns b
+where a.owner = b.owner
+and a.constraint_name = b.constraint_name
+and a.table_name = :table_name;
 
 
 
