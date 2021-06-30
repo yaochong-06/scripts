@@ -11,7 +11,9 @@ declare
   cursor c_lag is select inst_id,name,value from gv$dataguard_stats where name like '%lag%' order by inst_id,name;
   v_lag c_lag%rowtype;
   cursor c_max_sequence is select thread#,max(sequence#) as max_sequence from v$archived_log group by thread# order by thread#; 
-  cursor c_dest_error is select inst_id,dest_name,regexp_substr(destination,'((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))') as destination,error from gv$archive_dest where destination is not null order by dest_id;
+  cursor c_dest_error is select inst_id,dest_name,
+  regexp_substr(destination,'((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))') as destination,
+  rpad(decode(error,null,'No Error',error),45) as error from gv$archive_dest where destination is not null order by dest_id;
   v_dest_error c_dest_error%rowtype;
   v_max_sequence c_max_sequence%rowtype;
   cursor c_standby_lag is select inst_id,lpad(name,14) as name , value from gv$dataguard_stats where name like '%lag%' order by inst_id,name;
@@ -20,6 +22,9 @@ declare
   v_standby_max_seq c_standby_max_seq%rowtype;
   cursor c_mrp is select thread#,process,status,sequence#,block#,blocks from v$managed_standby where PROCESS like 'MRP%' order by sequence#;
   v_mrp c_mrp%rowtype;
+  cursor c_convert is select q'[alter system set ]' || name || q'[ = ']' || replace(value,', ',''',''') || q'[' scope=spfile;]' command from v$parameter where name in ('log_file_name_convert','db_file_name_convert');
+  v_convert c_convert%rowtype;
+
 begin
 select database_role,open_mode,PROTECTION_MODE,SWITCHOVER_STATUS,FORCE_LOGGING into v_database_role,v_open_mode,v_protection_mode,v_switchover,v_force_logging from v$database;
 
@@ -44,7 +49,7 @@ Primary Current Max Sequence#');
 
   dbms_output.put_line('
 Primary Dest_id Error Information');
-  dbms_output.put_line('----------------------');
+  dbms_output.put_line('=======================');
   open c_dest_error;
     loop fetch c_dest_error into v_dest_error;
     exit when c_dest_error%notfound;
@@ -54,7 +59,7 @@ Primary Dest_id Error Information');
 else 
   dbms_output.put_line('
 Standby Current Apply Lag Information');
-  dbms_output.put_line('----------------------');
+  dbms_output.put_line('=======================');
   open c_standby_lag;
     loop fetch c_standby_lag into v_standby_lag;
     exit when c_standby_lag%notfound;
@@ -64,7 +69,7 @@ Standby Current Apply Lag Information');
 
   dbms_output.put_line('
 Standby Max Applied Archived Log Information');
-  dbms_output.put_line('----------------------');
+  dbms_output.put_line('=======================');
   open c_max_sequence;
     loop fetch c_max_sequence into v_standby_max_seq;
     exit when c_max_sequence%notfound;
@@ -74,14 +79,29 @@ Standby Max Applied Archived Log Information');
 
   dbms_output.put_line('
 MRP Processes Status Information');
-  dbms_output.put_line('----------------------');
+  dbms_output.put_line('=======================');
   open c_mrp;
     loop fetch c_mrp into v_mrp;
     exit when c_mrp%notfound;
     dbms_output.put_line('thread# : ' ||v_mrp.thread#  || '  |  ' || 'PROCESS : ' ||v_mrp.PROCESS  || '  |  ' || 'STATUS :' ||v_mrp.STATUS || '  |  ' ||'SEQUENCE# :' || v_mrp.SEQUENCE# || '  |  ' ||'BLOCK# :' || v_mrp.BLOCK#);
     end loop;
   close c_mrp;
+  dbms_output.put_line('
+db_file_name_convert and log_file_name_convert in Physical Standby');
+  dbms_output.put_line('=======================');
+  open c_convert;
+    loop fetch c_convert into v_convert;
+    exit when c_convert%notfound;
+    dbms_output.put_line(v_convert.command);
+    end loop;
+  close c_convert;  
+
 end if;
 end;
 /
+
+
+
+
+
 

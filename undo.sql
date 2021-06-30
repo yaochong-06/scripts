@@ -18,7 +18,7 @@ SELECT INST_ID,
        BEGIN_TIME,
        END_TIME,
        lpad(TRUNC(UNDOBLKS * (SELECT VALUE FROM V$PARAMETER WHERE NAME = 'db_block_size' AND ROWNUM = 1) / 1024 / 1024,
-             2) || 'MB',12) AS undo_used_mb
+             2) || ' MB',12) AS undo_used_mb
   FROM GV$UNDOSTAT
  WHERE BEGIN_TIME > SYSDATE - 1
  ORDER BY BEGIN_TIME;
@@ -31,6 +31,10 @@ declare
   l_end      number;
   v_KTUXEUSN number;
   v_KTUXESLT number;
+  v_value    number;
+  v_value1   varchar2(20); 
+  v_cnt      number;
+
   cursor c_roll is select vs.sid || ',' || vs.serial# as sid, vs.username, rn.name roll_name, vt.start_time, vt.log_io, vt.phy_io, vt.used_ublk,
         round(vt.used_ublk * (select value/1024/1024 from v$parameter where name='db_block_size' and ROWNUM = 1),2) as used_usize, vt.used_urec, vt.recursive
   from
@@ -55,7 +59,7 @@ from
   sys.dba_segments, 
   sys.dba_rollback_segs
 where 
-  dba_segments.bytes/1024/1024 > 1 and -- only show > 1M 
+  dba_segments.bytes/1024/1024 > 10 and -- only show > 10M 
   dba_segments.segment_name = dba_rollback_segs.segment_name 
 order by sys.dba_rollback_segs.segment_id;
   v_seg c_seg%rowtype;
@@ -100,6 +104,18 @@ order by sys.dba_rollback_segs.segment_id;
 
 begin
 
+  select value into v_value from v$parameter where name = '_rollback_segment_count';
+  select count(*) into v_cnt from v$rollname;
+  select value into v_value1 from v$parameter where name = 'fast_start_parallel_rollback';
+  dbms_output.put_line('
+_rollback_segment_count and Current Node rollback segments Count(From v$rollname)
+If RAC System Node Count > 3 be carefull!!! Oracle Max Rollback Segments is 32760');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('fast_start_parallel_rollback        ' || ' : ' || v_value1);
+  dbms_output.put_line('_rollback_segment_count             ' || ' : ' || v_value);
+  dbms_output.put_line('Current Node rollback segments Count' || ' : ' || v_cnt );
+  
+
   dbms_output.put_line('
 Active transaction,rollback segments Information');
   dbms_output.put_line('======================');
@@ -117,7 +133,7 @@ Active transaction,rollback segments Information');
 
 
    dbms_output.put_line('
-Rollback Segments Basic Status Information
+Rollback Segments Basic Status Information(only Show the Rollback Segment Size > 10M)
 USN means Rollback Segments number');
   dbms_output.put_line('======================');
   dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
@@ -132,7 +148,7 @@ USN means Rollback Segments number');
   close c_seg;
 
     dbms_output.put_line('
-Active Transaction Rollback Segments Information(rollback segment>1G per transaction desc)');
+Active Transaction Rollback Segments Information(Only Show Rollback segment > 1G per transaction desc)');
   dbms_output.put_line('======================');
   dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   dbms_output.put_line('| USN |' || ' ROLLBACK_NAME   ' || '| SQL_ID        |' || '    SID_AND_SERIAL# ' || '| TRX_SIZE(MB) |' || ' TABLESPACE_NAME     ' || '| TADDR(v$session) |' || ' SQL_TEXT                                     ' || ' |');
@@ -196,6 +212,8 @@ How long does it take to roll back(Minutes)');
     dbms_output.put_line('------------------------------------------------------------------------------------------------------');
 end;
 /
+
+
 
 
 prompt Show undo statistics from V$UNDOSTAT....

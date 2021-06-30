@@ -4,27 +4,6 @@ col MB for a12
 col MBPS for a12
 alter session set nls_date_format='yyyymmdd hh24:mi';
 
-
-
-
-select * from (
-select a.instance_number,to_char(sn.BEGIN_INTERVAL_TIME,'yyyymmdd hh24:mi') Time, round((a.value-lag(value) over (order by a.snap_id))/1000000,2) "DB_TIME(s)"
-FROM dba_hist_snapshot sn, dba_hist_sys_time_model a
-where
-   a.stat_name='DB time' and a.instance_number=1 and sn.instance_number=1 and a.snap_id(+)=sn.snap_id
-union all
-select a.instance_number,to_char(sn.BEGIN_INTERVAL_TIME,'yyyymmdd hh24:mi') Time,round((a.value-lag(value) over (order by a.snap_id))/1000000,2) "DB_TIME(s)"
-FROM dba_hist_snapshot sn, dba_hist_sys_time_model a
-where
-a.stat_name='DB time' and a.instance_number=2 and sn.instance_number=2 and a.snap_id(+)=sn.snap_id
-union all
-select a.instance_number,to_char(sn.BEGIN_INTERVAL_TIME,'yyyymmdd hh24:mi') Time, round((a.value-lag(value) over (order by a.snap_id))/1000000,2) "DB_TIME(s)"
-FROM dba_hist_snapshot sn,dba_hist_sys_time_model a
-where
-a.stat_name='DB time' and a.instance_number=3 and sn.instance_number=3 and a.snap_id(+)=sn.snap_id
-) order by instance_number,Time;
-
-
 SELECT TIME2,MB,MBPS FROM
 (select 
         decode(grouping(time1),1,'all',time1) as time1,decode(grouping(time2),1,time1 || ' total: ',time2) as time2,

@@ -1,129 +1,96 @@
---Show DDL of procedure or view
-prompt Show DDL of procedure, view,table, index or synonym
-set long 10000
+
+set serveroutput on size 1000000
 set timing off
+set serveroutput on
 set feedback off
 set verify off
-set linesize 300
-set pages 0
-var object_name varchar2(200)
+set linesize 500
+undefine object_name
+
+var object_name varchar2(100);
+var owner varchar2(100);
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
 begin
   :object_name := upper('&object_name');
 end;
 /
+declare
 
-prompt show the owner object_type information...
-select 'OWNER        ','OBJECT_TYPE  ' from dual
-union all
-select '-------------','-------------' from dual
-union all
-select owner,object_type from dba_objects where object_name = :object_name;
-set feedback off
+   cursor c_obj is select owner,object_type from dba_objects where object_name = :object_name;
+   v_obj c_obj%rowtype;
+   cursor c_ddl is select dbms_metadata.get_ddl(case when object_type like 'PACKAGE%' then 'PACKAGE' 
+                                                     when object_type like 'DATABASE LINK' then 'DB_LINK' 
+                                                     when object_type like 'MATERIALIZED VIEW' then 'MATERIALIZED_VIEW' 
+                                                     when object_type = 'INDEX' then 'INDEX' 
+                                                     else object_type end, 
+                                                object_name, owner) as object_ddl 
+                    from dba_objects 
+                    where object_name = :object_name 
+                    AND object_type not like '%PARTITION';
 
-select text from dba_source where name = :object_name
-/
-select text from dba_views where view_name = :object_name
-/
-select view_definition from v$fixed_View_definition where view_name = :object_name
-/
+   v_ddl c_ddl%rowtype;
 
-select QUERY from dba_mviews where mview_name = :object_name
-/
-select * from dba_synonyms where synonym_name = :object_name
-/
-
-exec dbms_metadata.set_transform_param( dbms_metadata.session_transform,'SQLTERMINATOR', TRUE);
-
-prompt t
-select
-dbms_metadata.get_ddl(
-case when object_type like 'PACKAGE%' then 'PACKAGE' 
-when object_type like 'DATABASE LINK' then 'DB_LINK' 
-when object_type like 'MATERIALIZED VIEW' then 'MATERIALIZED_VIEW' 
-when object_type = 'INDEX' then 'INDEX'
-else object_type end, object_name, owner) as "TABLE_DDL" 
-from 
-	dba_objects 
-where 
-	object_name = :object_name 
-AND object_type not like '%PARTITION'
-/
-
-
-column cons_column_name heading COLUMN_NAME format a30
-
-prompt Show constraints of the table...
-col owner for a20
-col table_name for a20
-col constraint_name for a20
-col constraint_type for a20
-col r_constraint_name for a10
-col column_name for a20
-
-select
-     co.owner,
-     co.table_name,
-     co.constraint_name,
-     co.constraint_type,
-     co.r_constraint_name,
-     cc.column_name          cons_column_name,
-     cc.position,
-     co.status,
-     co.validated
-from
-     dba_constraints co,
-     dba_cons_columns cc
-where
-    co.owner              = cc.owner
-and co.table_name         = cc.table_name
-and co.constraint_name    = cc.constraint_name
-and co.table_name = :object_name
-order by
-     owner,
-     table_name,
-     constraint_type,
-     constraint_name,
-     position,
-     column_name
-/
-prompt show constraint for the table  ...
-select case 
-	when co.constraint_type <> 'R' then dbms_metadata.get_ddl('CONSTRAINT',co.constraint_name,co.owner) 
-	when co.constraint_type = 'R' then dbms_metadata.get_ddl('REF_CONSTRAINT',co.constraint_name,co.owner) end as text
-from
-     dba_constraints co,
-     dba_cons_columns cc
-where
-    co.owner              = cc.owner
-and co.table_name         = cc.table_name
-and co.constraint_name    = cc.constraint_name
-and co.table_name = :object_name
-order by
+   cursor c_cons is select case when co.constraint_type <> 'R' 
+            then dbms_metadata.get_ddl('CONSTRAINT',co.constraint_name,co.owner) 
+            when co.constraint_type = 'R' 
+            then dbms_metadata.get_ddl('REF_CONSTRAINT',co.constraint_name,co.owner) end as text
+    from dba_constraints co, dba_cons_columns cc
+    where co.owner              = cc.owner
+    and co.table_name         = cc.table_name
+    and co.constraint_name    = cc.constraint_name
+    and co.table_name = :object_name
+    order by
      co.owner,
      co.table_name,
      co.constraint_type,
-     co.constraint_name
+     co.constraint_name;
+     v_cons c_cons%rowtype;
+
+begin
+  dbms_metadata.set_transform_param( dbms_metadata.session_transform,'SQLTERMINATOR', TRUE);
+  dbms_output.put_line('
+Display The Object Type in The Database');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('------------------------------------------------------');
+  dbms_output.put_line('| OWNER            |' || ' OBJECT_TYPE                     '   || '|');
+  dbms_output.put_line('------------------------------------------------------');
+  open c_obj;
+    loop fetch c_obj into v_obj;
+    exit when c_obj%notfound;
+    dbms_output.put_line('| ' || rpad(v_obj.OWNER,16) ||' | '|| rpad(v_obj.object_type,32) || '|');
+    dbms_output.put_line('------------------------------------------------------');
+    end loop;
+  close c_obj;
+
+
+  dbms_output.put_line('
+Show The Object DDL Information)');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| OBJECT DDL                                                                                                      |');
+  dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------');
+  open c_ddl;
+    loop fetch c_ddl into v_ddl;
+    exit when c_ddl%notfound;
+    dbms_output.put_line(v_ddl.object_ddl);
+    dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------');
+    end loop;
+  close c_ddl;
+  if v_obj.object_type like 'TABLE%' then 
+
+  dbms_output.put_line('
+Constraint DDL Information if The Object is A Table');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| Constraint DDL                                                                                                  |');
+  dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------');
+  open c_cons;
+    loop fetch c_cons into v_cons;
+    exit when c_cons%notfound;
+    dbms_output.put_line(v_cons.text);
+    dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------');
+    end loop;
+  close c_cons;
+   end if;
+end;
 /
-
-select 'grant '||privilege||' on '||owner||'.'||table_name||' to '||grantee||decode(grantable, 'YES', ' WITH GRANT OPTION;',';') cmd
-from dba_tab_privs
-where table_name = :object_name
-/
-
-col schema_user format a10
-col what format a50
-select job, next_date, failures, broken, schema_user, what from dba_jobs;
-
-
-
-
-
-select s.text
-from dba_triggers t, dba_source s
-where
-t.owner = s.owner
-and t.trigger_name = s.name
-and t.table_name = upper(:object_name);
-
-set feedback on
-set timing on

@@ -102,7 +102,7 @@ order by b.blocks;
     order by d.PGA_USED_MEM; 
     v_pga c_pga%rowtype;
 
-     cursor c_recovery is SELECT name as recovery_dest,
+     cursor c_recovery is SELECT decode(name,null,'None',name) as recovery_dest,
 decode(space_limit,0,0,(space_used - SPACE_RECLAIMABLE) / space_limit * 100) as used_pct
 FROM v$recovery_file_dest;
      v_recovery c_recovery%rowtype;
@@ -112,15 +112,15 @@ begin
   dbms_output.put_line('
 Tablespace Used Information');
   dbms_output.put_line('======================');
-  dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   dbms_output.put_line('| TABLESPACE_NAME     |' || ' Used_Pct% ' || '|                 Used |' || ' AUTOEXTEND ' || '| TOTAL_GB |' || ' USED_GB ' || '| FREE_GB |' || ' FILE_CNT ' || '| STATUS |' || '  CONTENTS ' || '| EXTENT_MANAGE |' || ' MAXSIZE(MB) ' || '|'); 
-  dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   open c_tbs;
     loop fetch c_tbs into v_tbs;
     exit when c_tbs%notfound;
     dbms_output.put_line('| ' || rpad(v_tbs.TABLESPACE_NAME,19) ||' | '|| lpad(v_tbs.used_pct,9) || ' | '|| rpad(v_tbs.used,20) || ' | '|| lpad(v_tbs.autoextensible,10) || ' | '|| lpad(v_tbs.TOTAL_GB,8) || ' | '|| lpad(v_tbs.USED_GB,7) || ' | '|| lpad(v_tbs.FREE_GB,7) || ' | '|| lpad(v_tbs.DATAFILE_COUNT,8) || ' | '|| lpad(v_tbs.STATUS,6) || ' | '|| lpad(v_tbs.CONTENTS,9) || ' | '||lpad(v_tbs.extent_management,13) ||' | ' || lpad(v_tbs.maxsize,12) || '|');
     end loop;
-    dbms_output.put_line('------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_tbs;
 
 
@@ -215,42 +215,42 @@ else
   dbms_output.put_line('
 ASM Diskgroup Information');
   dbms_output.put_line('======================');
-  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------');
-  dbms_output.put_line('| GROUP_NUMBER |' || ' DISKGROUP_NAME ' || '| AU_SIZE |' || '     STATE ' || '|   TYPE |' || ' TOTAL_GB ' || '| FREE_GB |' || ' "Used_Pct%" ' || '| USABLE_FILE_GB |' || ' REQUIRED_MIRROR_FREE_MB ' || '|'); 
-  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| GROUP# |' || ' DISKGROUP_NAME ' || '| AU_SIZE |' || '     STATE ' || '|   TYPE |' || ' TOTAL_GB ' || '| FREE_GB |' || ' "Used_Pct%" ' || '| USABLE_FILE_GB |' || ' REQUIRED_MIRROR_FREE_MB ' || '|'); 
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------');
   open c_group;
     loop fetch c_group into v_group;
     exit when c_group%notfound;
-    dbms_output.put_line('| ' || rpad(v_group.GROUP_NUMBER,12) ||' | '|| rpad(v_group.DISKGROUP_NAME,14) || ' | '|| lpad(v_group.AU_SIZE,7) || ' | '|| lpad(v_group.STATE,9) || ' | '|| lpad(v_group.TYPE,6) || ' | '|| lpad(v_group.TOTAL_GB,8) || ' | '|| lpad(v_group.FREE_GB,7) || ' | '|| lpad(v_group.Used_Pct,11) || ' | '|| lpad(v_group.USABLE_FILE_GB,14) || ' | '|| lpad(v_group.REQUIRED_MIRROR_FREE_MB,24) || '|');
+    dbms_output.put_line('| ' || rpad(v_group.GROUP_NUMBER,6) ||' | '|| rpad(v_group.DISKGROUP_NAME,14) || ' | '|| lpad(v_group.AU_SIZE,7) || ' | '|| lpad(v_group.STATE,9) || ' | '|| lpad(v_group.TYPE,6) || ' | '|| lpad(v_group.TOTAL_GB,8) || ' | '|| lpad(v_group.FREE_GB,7) || ' | '|| lpad(v_group.Used_Pct,11) || ' | '|| lpad(v_group.USABLE_FILE_GB,14) || ' | '|| lpad(v_group.REQUIRED_MIRROR_FREE_MB,24) || '|');
     end loop;
-    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------');
   close c_group;
   dbms_output.put_line('
 ASM Disk Information');
   dbms_output.put_line('======================');
-  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-  dbms_output.put_line('| GROUP_NUMBER |' || ' DISKGROUP_NAME ' || '|                                            PATH |' || '      FAILGROUP ' || '|      DISK_NAME |' || '   STATE ' || '| MODE_STATS |' || ' HEADER_STATS ' || '| MOUNT_STATS |' || ' REPAIR_TIMER ' || '|'); 
-  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| GROUP# |' || ' DISKGROUP_NAME ' || '|                                            PATH |' || '      FAILGROUP ' || '|      DISK_NAME |' || '   STATE ' || '| MODE_STATS |' || ' HEADER_STATS ' || '| MOUNT_STATS |' || ' REPAIR_TIMER ' || '|'); 
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   open c_disk;
     loop fetch c_disk into v_disk;
     exit when c_disk%notfound;
-    dbms_output.put_line('| ' || rpad(v_disk.GROUP_NUMBER,12) ||' | '|| rpad(v_disk.DISKGROUP_NAME,14) || ' | '|| lpad(v_disk.path,47) || ' | '|| lpad(v_disk.FAILGROUP,14) || ' | '|| lpad(v_disk.DISK_NAME,14) || ' | '|| lpad(v_disk.STATE,7) || ' | '|| lpad(v_disk.MODE_STATUS,10) || ' | '|| lpad(v_disk.HEADER_STATUS,12) || ' | '|| lpad(v_disk.MOUNT_STATUS,11) || ' | '|| lpad(v_disk.REPAIR_TIMER,13) || '|');
+    dbms_output.put_line('| ' || rpad(v_disk.GROUP_NUMBER,6) ||' | '|| rpad(v_disk.DISKGROUP_NAME,14) || ' | '|| lpad(v_disk.path,47) || ' | '|| lpad(v_disk.FAILGROUP,14) || ' | '|| lpad(v_disk.DISK_NAME,14) || ' | '|| lpad(v_disk.STATE,7) || ' | '|| lpad(v_disk.MODE_STATUS,10) || ' | '|| lpad(v_disk.HEADER_STATUS,12) || ' | '|| lpad(v_disk.MOUNT_STATUS,11) || ' | '|| lpad(v_disk.REPAIR_TIMER,13) || '|');
     end loop;
-    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_disk;
 
 dbms_output.put_line('
 ASM Client Information');
   dbms_output.put_line('======================');
-  dbms_output.put_line('-------------------------------------------------------------------------------------------------');
-  dbms_output.put_line('| GROUP_NUMBER |' || ' INSTANCE_NAME ' || '|  DB_NAME |' || '      STATUS |' || ' SOFTWARE_VERSION ' || '| COMPATIBLE_VERSION ' || '|'); 
-  dbms_output.put_line('-------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('-------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| GROUP# |' || ' INSTANCE_NAME ' || '|  DB_NAME |' || '      STATUS |' || ' SOFTWARE_VERSION ' || '| COMPATIBLE_VERSION ' || '|'); 
+  dbms_output.put_line('-------------------------------------------------------------------------------------------');
   open c_client;
     loop fetch c_client into v_client;
     exit when c_client%notfound;
-    dbms_output.put_line('| ' || rpad(v_client.GROUP_NUMBER,12) ||' | '|| lpad(v_client.INSTANCE_NAME,13) || ' | '|| lpad(v_client.DB_NAME,8) || ' | '|| lpad(v_client.STATUS,11) || ' | '|| lpad(v_client.SOFTWARE_VERSION,16) || ' | '|| lpad(v_client.COMPATIBLE_VERSION,19) || '|');
+    dbms_output.put_line('| ' || rpad(v_client.GROUP_NUMBER,16) ||' | '|| lpad(v_client.INSTANCE_NAME,13) || ' | '|| lpad(v_client.DB_NAME,8) || ' | '|| lpad(v_client.STATUS,11) || ' | '|| lpad(v_client.SOFTWARE_VERSION,16) || ' | '|| lpad(v_client.COMPATIBLE_VERSION,19) || '|');
     end loop;
-    dbms_output.put_line('-------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('-------------------------------------------------------------------------------------------');
   close c_client;
   end if;
 end;

@@ -10,6 +10,24 @@ col machine for a25
 col program for a28
 col sql_text for a20
 col sql_id for a13
+prompt Display Avg and Max Connections of All Nodes since Instance Startup
+
+col MACHINE for a25
+col PROGRAM for a50
+col USERNAME for a16
+col INST_ID for 9999999
+select INSTANCE_NUMBER as INST#,
+to_char(BEGIN_TIME,'yyyy-mm-dd hh24:mi') snap_time,
+round(AVERAGE,0) avg_connections,
+MAXVAL as max_connections
+from DBA_HIST_SYSMETRIC_SUMMARY 
+where METRIC_NAME='Current Logons Count' 
+and BEGIN_TIME > (select min(STARTUP_TIME) from gv$instance)
+order by 1,2;
+
+
+
+
 select /*+use_nl(a,b,c)*/distinct a.sid || ',' ||a.serial# as sid_and_serial#,
 a.username,
 a.terminal,
