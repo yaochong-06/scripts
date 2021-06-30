@@ -37,14 +37,14 @@ where  s.RESOURCE_CONSUMER_GROUP is not null
 
 select group_or_subplan, mgmt_p1, mgmt_p2, mgmt_p3, mgmt_p4, mgmt_p5, mgmt_p6, mgmt_p7, mgmt_p8, max_utilization_limit from dba_rsrc_plan_directives where plan = (select name from v$rsrc_plan where is_top_plan = 'TRUE');
 
-GROUP_OR_SUBPLAN                  MGMT_P1    MGMT_P2    MGMT_P3    MGMT_P4    MGMT_P5    MGMT_P6    MGMT_P7    MGMT_P8 MAX_UTILIZATION_LIMIT
------------------------------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------- ---------------------
-APP                                     0         50          0          0          0          0          0          0
-ORA$AUTOTASK_SUB_PLAN                   0          0          0          0          0          0          0          0
-OTHER_GROUPS                            0          0          0          0          0          0          0          0
-P1                                     80          0          0          0          0          0          0          0
-SYS_GROUP                               0          0          0          0          0          0          0          0
-ORA$DIAGNOSTICS                         0          0          0          0          0          0          0          0
+GROUP_OR_SUBPLAN       MGMT_P1  MGMT_P2  MGMT_P3  MGMT_P4  MGMT_P5  MGMT_P6  MGMT_P7  MGMT_P8 MAX_UTILIZATION_LIMIT
+--------------------- -------- -------- -------- -------- -------- -------- -------- -------- ---------------------
+APP                          0       50        0        0        0        0        0        0
+ORA$AUTOTASK_SUB_PLAN        0        0        0        0        0        0        0        0
+OTHER_GROUPS                 0        0        0        0        0        0        0        0
+P1                          80        0        0        0        0        0        0        0
+SYS_GROUP                    0        0        0        0        0        0        0        0
+ORA$DIAGNOSTICS              0        0        0        0        0        0        0        0
 
 6 rows selected.
 

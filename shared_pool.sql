@@ -1,7 +1,7 @@
 --Library pool usage
 -- library pool
 set pages 1000
-set lines 110
+set lines 400
 break on report 
 compute sum of gets on report
 compute sum of pins on report
@@ -9,6 +9,7 @@ compute avg of "gethitratio(%)" on report
 compute avg of "pinhitratio(%)" on report
 compute avg of "loadpinratio(%)" on report
 compute avg of invalidations on report
+col namespace for a40
 prompt loadpinratio < 1%
 prompt gethitratio > 95% 
 prompt invalidations = 0

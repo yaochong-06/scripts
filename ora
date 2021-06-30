@@ -8567,17 +8567,6 @@ if [ "$1" = "awr" ]; then
     eid=$3   
   fi
   
-#    if [ "$2" = "" -o "$3" = "" ]; then
-#    #ora awrsnap
-#    #echo "ora awr  <begin_snapid> <end_snapid> "
-#    bid=`echo "select trim(12345||max(snap_id)-1) as bid from dba_hist_snapshot;" | sqlplus -s $DBUSER|grep 12345|cut -c 6-15`
-#    let eid=bid+1
-#    #exit 1
-#   else
-#    bid=$2
-#    eid=$3
-#   fi 
-
   
   sqlplus -s /NOLOG << ! | egrep -v "Session altered|Connected|rows selected"
   
