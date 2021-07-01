@@ -45,22 +45,17 @@ prompt request_failures > 0  --- too small
 select free_space,avg_free_size,request_misses,request_failures,aborted_requests
   from v$shared_pool_reserved;
 
-col name format a30    
+col object_name format a30    
 col owner format a10
 prompt object could be pin in the database
-    select name,owner,sharable_mem,type from v$db_object_cache
-      where sharable_mem > 10000
-        and kept = 'NO'
-        and type in ('PACKAGE','PACKAGE BODY','FUNCTION','PROCEDURE');
-
-select * from ( select owner,name,type,executions,loads from v$db_object_cache 
-  where kept = 'NO' 
-    and type  in ('PACKAGE','PACKAGE BODY','FUNCTION',
-                  'PROCEDURE','SEQUENCE','TYPE','TRIGGER','SYNONYM')
-  order by executions desc) where rownum < 10
-        
-  
-
-
-
-
+select 
+  owner,
+  name as object_name,
+  sharable_mem,
+  executions,
+  type,
+  loads
+from v$db_object_cache 
+where sharable_mem > 10000
+  and kept = 'NO'
+  and type in ('PACKAGE','PACKAGE BODY','FUNCTION','PROCEDURE','SEQUENCE','TYPE','TRIGGER','SYNONYM');

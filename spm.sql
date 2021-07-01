@@ -1,13 +1,22 @@
-SELECT signature, sql_handle, plan_name, enabled, accepted, fixed, origin
-  FROM dba_sql_plan_baselines WHERE plan_name = '&plan_name';
 
-
-SELECT signature, sql_handle, plan_name, enabled, accepted, fixed, origin
-  FROM dba_sql_plan_baselines WHERE sql_handle = '&sql_handle';
--- evolue the baseline with verify off
--- @sql_baseline_enable.sql <sql_handle> <plan_name>
--- Sidney Chen(Nov/09)
---
+SELECT PARSING_SCHEMA_NAME,
+       SQL_HANDLE,
+       PLAN_NAME,
+       ENABLED,
+       ACCEPTED,
+       FIXED,
+       SQL_TEXT,
+       OPTIMIZER_COST,
+       EXECUTIONS,
+       ELAPSED_TIME,
+       CPU_TIME/60,
+       BUFFER_GETS
+       DISK_READS,
+       DIRECT_WRITES,
+       ROWS_PROCESSED,
+       FETCHES
+  FROM DBA_SQL_PLAN_BASELINES 
+  order by PARSING_SCHEMA_NAME,SQL_HANDLE,OPTIMIZER_COST;
 
 var pbsts varcahr2(1000)
 exec :pbsts := dbms_spm.evolve_sql_plan_baseline
@@ -17,7 +26,6 @@ exec :pbsts := dbms_spm.evolve_sql_plan_baseline
  COMMIT=>'YES');
 -- evolue the baseline with verify on
 -- @sql_baseline_enable2.sql <sql_handle>
--- Sidney Chen(Nov/09)
 --
 
 SELECT dbms_spm.evolve_sql_plan_baseline(
@@ -30,9 +38,6 @@ SELECT dbms_spm.evolve_sql_plan_baseline(
 FROM dual;
 -- sql_baseline.sql <sql_id_to_load> <plan_hash_value> <sql_handle> <old_plan_name_to_drop>
 -- Sidney Chen(Nov 3)
-
-SELECT signature, sql_handle, plan_name, enabled, accepted, fixed, origin
-  FROM dba_sql_plan_baselines WHERE sql_handle = '&1';
 
 SET SERVEROUTPUT ON
 

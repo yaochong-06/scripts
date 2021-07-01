@@ -1,3 +1,4 @@
+
 set serveroutput on 
 set verify off
 set timing off
@@ -10,12 +11,12 @@ var table_name varchar2(100);
 var owner varchar2(100);
 
 begin
-  :table_name := upper('&table_name');
   :owner :=upper('&owner');
+  :table_name := upper('&table_name');
 end;
 /
 
-alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
+--alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
 declare
     cursor c_i is SELECT A.INDEX_NAME,A.COLUMN_NAME,A.COLUMN_POSITION,decode(b.TABLESPACE_NAME,null,'None',B.TABLESPACE_NAME) as TABLESPACE_NAME,B.INDEX_TYPE,B.DEGREE,
        round(C.BYTES / 1024 / 1024) AS INDEX_MB,
@@ -87,6 +88,48 @@ declare
 
          v_part c_par_ind%rowtype;
 
+         cursor c_not is SELECT X.OWNER,
+       X.TABLE_NAME,
+       X.INDEX_NAME,
+       to_char(SS.CREATED,'yyyy-mm-dd hh24:mi:ss') as created,
+       C.COLUMN_POSITION,
+       C.COLUMN_NAME,
+       S.BYTES / 1024 / 1024 M
+    --   q'[select count(*),count(distinct ]' || C.COLUMN_NAME ||
+    --   q'[) from ]' || X.OWNER || '.' || X.TABLE_NAME || q'[;]' AS QUERY_Q
+  FROM (SELECT A.OWNER, A.TABLE_NAME, A.INDEX_NAME
+          FROM DBA_INDEXES A
+         WHERE A.OWNER IN (SELECT USERNAME
+                             FROM DBA_USERS
+                            WHERE USERNAME not in('SYSTEM','WMSYS','XDB','SYS','SCOTT','QMONITOR','OUTLN','ORDSYS','ORDDATA','OJVMSYS','MDSYS','LBACSYS','DVSYS',
+                       'DBSNMP','APEX_040200','AUDSYS','CTXSYS','APEX_030200','EXFSYS','OLAPSYS','SYSMAN','WH_SYNC','GSMADMIN_INTERNAL'))
+           AND (A.OWNER, A.INDEX_NAME) NOT IN
+               (SELECT /*+unnest*/
+                 B.OBJECT_OWNER, B.OBJECT_NAME
+                  FROM GV$SQL A, GV$SQL_PLAN B
+                 WHERE A.SQL_ID = B.SQL_ID
+                   AND A.CHILD_NUMBER = B.CHILD_NUMBER
+                   AND B.OBJECT_OWNER IN
+                       (SELECT USERNAME
+                          FROM DBA_USERS
+                         WHERE USERNAME not in ('SYSTEM','WMSYS','XDB','SYS','SCOTT','QMONITOR','OUTLN','ORDSYS','ORDDATA','OJVMSYS','MDSYS','LBACSYS','DVSYS',
+                       'DBSNMP','APEX_040200','AUDSYS','CTXSYS','APEX_030200','EXFSYS','OLAPSYS','SYSMAN','WH_SYNC','GSMADMIN_INTERNAL'))
+                   AND B.OBJECT_TYPE LIKE '%INDEX%'
+                   AND B.TIMESTAMP > (select min(startup_time) from gv$instance))
+           AND A.TABLE_NAME NOT LIKE 'SYS%'
+           AND A.UNIQUENESS <> 'UNIQUE') X
+ INNER JOIN DBA_IND_COLUMNS C
+    ON C.INDEX_OWNER = X.OWNER
+   AND C.INDEX_NAME = X.INDEX_NAME
+   AND C.TABLE_NAME = X.TABLE_NAME
+ INNER JOIN DBA_SEGMENTS S
+    ON S.SEGMENT_NAME = C.TABLE_NAME
+   AND S.OWNER = C.INDEX_OWNER
+   -- AND S.BYTES   > 10
+ INNER JOIN DBA_OBJECTS SS ON SS.OBJECT_NAME = X.INDEX_NAME
+ ORDER BY BYTES desc,OWNER,TABLE_NAME,INDEX_NAME,CREATED;
+         v_not c_not%rowtype;
+
 
 
 begin
@@ -121,9 +164,6 @@ Partition Index Information(if index is Local Index)');
   close c_par_ind;
 
 
-
-
-
   dbms_output.put_line('
 Foreign Key Without Index Information');
   dbms_output.put_line('======================');
@@ -138,8 +178,106 @@ Foreign Key Without Index Information');
     dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_foreign_key_without_index;
 
+
+  dbms_output.put_line('
+Index Not Used Since Instance Startup');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| OWNER                |' || ' TABLE_NAME            ' || '| INDEX_NAME                     |' || ' CREATED             ' || '| COLUMN_POSITION |' || ' COLUMN_NAME                  ' || '| INDEX_MB         ' || '|');
+  dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  open c_not;
+    loop fetch c_not into v_not;
+    exit when c_not%notfound;
+    dbms_output.put_line('| ' || rpad(v_not.owner,20) ||' | '|| rpad(v_not.table_name,21) || ' | '|| rpad(v_not.index_name,30) || ' | '|| lpad(v_not.created,19) || ' | '|| lpad(v_not.COLUMN_POSITION,15) || ' | '|| rpad(v_not.COLUMN_NAME,28) ||  ' | '|| lpad(v_not.m,16) || ' |');
+    end loop;
+    dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  close c_not;
+
+
 end;
 /
+
+
+
+
+
+
+
+
+
+undefine index_name
+undefine owner
+var index_name varchar2(100);
+var owner varchar2(100);
+
+begin
+  :owner :=upper('&owner');
+  :index_name := upper('&index_name');
+end;
+/
+
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
+declare
+    sql_analyze varchar2(500);
+    cursor c_valid is select name as index_name,
+       del_lf_rows,
+       lf_rows,
+       round(del_lf_rows / decode(lf_rows, 0, 1, lf_rows) * 100, 0) frag_pct
+  from index_stats;
+    v_valid c_valid%rowtype;
+begin
+
+  sql_analyze:='analyze index '|| :owner || '.'|| :index_name ||' validate structure';
+  execute immediate sql_analyze;
+
+  dbms_output.put_line('
+Index Fragment Information(analyze index to get the index frag Information)');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('---------------------------------------------------------------------------');
+  dbms_output.put_line('| INDEX_NAME             |' || ' TOTAL_LEAF_ROWS ' || '| DELETE_LEAF_ROWS |' || ' FRAG_PCT% ' || '|');
+  dbms_output.put_line('---------------------------------------------------------------------------');
+  open c_valid;
+    loop fetch c_valid into v_valid;
+    exit when c_valid%notfound;
+    dbms_output.put_line('| ' || rpad(v_valid.index_name,22) ||' | '|| rpad(v_valid.lf_rows,15) || ' | '|| rpad(v_valid.del_lf_rows,16) || ' | '|| lpad(v_valid.frag_pct || '%',9) || ' |');
+    end loop;
+    dbms_output.put_line('---------------------------------------------------------------------------');
+  close c_valid;
+  if v_valid.frag_pct > 20 then
+    dbms_output.put_line('
+Current Index: ' || :owner ||'.' ||:index_name || ' Index Frag is '|| v_valid.frag_pct || '%');
+    dbms_output.put_line('======================');
+    dbms_output.put_line('Please Execute: alter index ' ||:owner ||'.' ||:index_name ||' rebuild online;');
+    dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------');
+
+  end if;  
+end;
+/
+
+
+
+prompt Index monitor For Current Table...
+set verify off
+set linesize 300
+col owner for a20
+col index_name for a25
+col table_name for a25
+select
+    u.name owner,
+    io.name index_name,
+    t.name table_name,
+    decode(bitand(i.flags, 65536), 0, 'NO', 'YES') monitoring,
+    decode(bitand(ou.flags, 1), 0, 'NO', 'YES') used,
+    ou.start_monitoring,
+    ou.end_monitoring
+from sys.user$ u, sys.obj$ io, sys.obj$ t, sys.ind$ i, sys.object_usage ou
+where
+    i.obj# = ou.obj#
+    and io.obj# = ou.obj#
+    and t.obj# = i.bo#
+    and u.user# = io.owner#
+    and upper(u.name) like '%' || upper(:owner) || '%'
+    and upper(t.name) like '%' || upper(:table_name) || '%';
 
 
 col owner for a20
@@ -240,16 +378,5 @@ from all_constraints a,all_cons_columns b
 where a.owner = b.owner
 and a.constraint_name = b.constraint_name
 and a.table_name = :table_name;
-
-
-
-
-
-
-
-
-
-
-
 
 
