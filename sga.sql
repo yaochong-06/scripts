@@ -304,11 +304,6 @@ end;
 
 
 
-
-
-
-
-
 column pool_name format a9
 column object_name format a20
 column sub_name format a20
