@@ -18,7 +18,25 @@ end;
 
 --alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
 declare
-    cursor c_i is SELECT A.INDEX_NAME,A.COLUMN_NAME,A.COLUMN_POSITION,decode(b.TABLESPACE_NAME,null,'None',B.TABLESPACE_NAME) as TABLESPACE_NAME,B.INDEX_TYPE,B.DEGREE,
+    cursor c_i is SELECT 
+       A.INDEX_NAME,
+       A.COLUMN_NAME,
+           decode(t.DATA_TYPE,
+           'NUMBER',t.DATA_TYPE||'('||
+           decode(t.DATA_PRECISION,
+                  null,t.DATA_LENGTH||')',
+                  t.DATA_PRECISION||','||t.DATA_SCALE||')'),
+                  'DATE',t.DATA_TYPE,
+                  'LONG',t.DATA_TYPE,
+                  'LONG RAW',t.DATA_TYPE,
+                  'ROWID',t.DATA_TYPE,
+                  'MLSLABEL',t.DATA_TYPE,
+                  t.DATA_TYPE||'('||t.DATA_LENGTH||')') ||' '||
+           decode(t.nullable,
+                  'N','NOT NULL',
+                  'n','NOT NULL',
+                  NULL) col_type,
+       A.COLUMN_POSITION,decode(b.TABLESPACE_NAME,null,'None',B.TABLESPACE_NAME) as TABLESPACE_NAME,B.INDEX_TYPE,B.DEGREE,
        round(C.BYTES / 1024 / 1024) AS INDEX_MB,
        A.DESCEND,
        case when B.STATUS = 'UNUSABLE' then 'NO' else 'YES' end USABLE,
@@ -26,8 +44,10 @@ declare
        to_char(b.last_analyzed,'yymmdd hh24:mi')) as last_analyzed,
        case when b.visibility = 'VISIBLE' then 'YES' else 'NO ' end visibility,
        case when uniqueness = 'UNIQUE' then 'YES' else 'NO ' end UNIQUENESS
-  FROM DBA_IND_COLUMNS A, DBA_INDEXES B, DBA_SEGMENTS C
+  FROM DBA_IND_COLUMNS A, DBA_INDEXES B, DBA_SEGMENTS C ,DBA_TAB_COLUMNS T
  WHERE A.INDEX_NAME = B.INDEX_NAME
+   AND T.TABLE_NAME = A.TABLE_NAME
+   AND A.COLUMN_NAME = T.COLUMN_NAME 
    AND A.TABLE_NAME = :table_name
    AND a.INDEX_OWNER = :owner
    AND C.SEGMENT_NAME = A.INDEX_NAME
@@ -137,15 +157,15 @@ begin
   dbms_output.put_line('
 Index Information(contains Global and Local index)');
   dbms_output.put_line('======================');
-  dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-  dbms_output.put_line('| INDEX_NAME             |' || ' COLUMN_NAME    ' || '| COLUMN_POSITION |' || ' TABLESPACE_NAME ' || '| INDEX_TYPE |' || ' DEGREE ' || '| INDEX_MB |' || ' DESCEND ' || '| USABLE |'  || ' LAST_ANALYZED '|| '| VISIABLE |'  || ' UNIQUENESS '|| '|');
-  dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| INDEX_NAME             |' || ' COLUMN_NAME    ' || '| COLUMN_TYPE          ' || '| COLUMN_POSITION |' || ' TABLESPACE_NAME ' || '| INDEX_TYPE |' || ' DEGREE ' || '| INDEX_MB |' || ' DESCEND ' || '| USABLE |'  || ' LAST_ANALYZED '|| '| VISIABLE |'  || ' UNIQUE '|| '|');
+  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   open c_i;
     loop fetch c_i into v_i;
     exit when c_i%notfound;
-    dbms_output.put_line('| ' || rpad(v_i.INDEX_NAME,22) ||' | '|| rpad(v_i.COLUMN_NAME,14) || ' | '|| lpad(v_i.COLUMN_POSITION,15) || ' | '|| lpad(v_i.TABLESPACE_NAME,15) || ' | '|| lpad(v_i.INDEX_TYPE,10) || ' | '|| lpad(v_i.DEGREE,6) ||  ' | '|| lpad(v_i.INDEX_MB,8) || ' | '|| lpad(v_i.DESCEND,7) || ' | '|| lpad(v_i.USABLE,6) || ' | '|| lpad(v_i.LAST_ANALYZED,13) || ' | '|| lpad(v_i.visibility,8) || ' | '|| lpad(v_i.UNIQUENESS,11) ||'|');
+    dbms_output.put_line('| ' || rpad(v_i.INDEX_NAME,22) ||' | '|| rpad(v_i.COLUMN_NAME,14) || ' | ' ||rpad(v_i.col_type,20) ||' | '|| lpad(v_i.COLUMN_POSITION,15) || ' | '|| lpad(v_i.TABLESPACE_NAME,15) || ' | '|| lpad(v_i.INDEX_TYPE,10) || ' | '|| lpad(v_i.DEGREE,6) ||  ' | '|| lpad(v_i.INDEX_MB,8) || ' | '|| lpad(v_i.DESCEND,7) || ' | '|| lpad(v_i.USABLE,6) || ' | '|| lpad(v_i.LAST_ANALYZED,13) || ' | '|| lpad(v_i.visibility,8) || ' | '|| lpad(v_i.UNIQUENESS,7) ||'|');
     end loop;
-    dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_i;
 
 

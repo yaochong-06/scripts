@@ -1,14 +1,4 @@
-col sql_id for A15
-set verify off
-col executions_delta for 99999999
-col elp_time_per_exec for 99999999
-col cpu_time_per_execfor 99999999
-col rows_per_execfor 99999999
-col lio_per_exec for 999999999
-col disk_per_exec for 99999999
-
-select
-    sql_id,
+select    sql_id,
     plan_hash_value,
     executions_delta,
     elp_time_per_exec,
@@ -40,12 +30,13 @@ from
     where
         s.instance_number=x.instance_number
     and s.snap_id = x.snap_id
-    and s.begin_interval_time > sysdate - nvl(to_number('&Days'),7)
+    --and s.begin_interval_time > &begin_time
+    )
     group by x.sql_id, x.plan_hash_value,x.PARSING_SCHEMA_NAME
     ) base
 )
 where PARSING_SCHEMA_NAME
-and max_elp_time_per_exec > nvl(to_number('&elp_time_per_exec'), 0.1)
+and max_elp_time_per_exec > 1)
 and cnt > 1
 order by max_elp_time_per_exec, elp_time_per_exec
 /

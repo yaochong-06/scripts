@@ -2,7 +2,9 @@ col comm format a300
 set long 999999999
 set linesize 500
 set pages 1000
-
+prompt Parallel SQL
+prompt run 5 secondes
+prompt /*+ monitor */
 -- description:	display the sql statistics from v$sql_monitor and v$sql_plan_monitor
 -- usage:		@sqlmon	
 -- author:		chongzi

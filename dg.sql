@@ -12,8 +12,9 @@ declare
   v_lag c_lag%rowtype;
   cursor c_max_sequence is select thread#,max(sequence#) as max_sequence from v$archived_log group by thread# order by thread#; 
   cursor c_dest_error is select inst_id,dest_name,
-  regexp_substr(destination,'((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))') as destination,
-  rpad(decode(error,null,'No Error',error),45) as error from gv$archive_dest where destination is not null order by dest_id;
+  decode(regexp_substr(destination,'((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))'),null,'None',
+  regexp_substr(destination,'((25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))')) as destination,
+  decode(error,null,'None',error) as error from gv$archive_dest where destination is not null order by dest_id;
   v_dest_error c_dest_error%rowtype;
   v_max_sequence c_max_sequence%rowtype;
   cursor c_standby_lag is select inst_id,lpad(name,14) as name , value from gv$dataguard_stats where name like '%lag%' order by inst_id,name;
@@ -43,6 +44,7 @@ Primary Current Max Sequence#');
   open c_max_sequence;
     loop fetch c_max_sequence into v_max_sequence;
     exit when c_max_sequence%notfound;
+    dbms_output.put_line('-------------------------------------------------------------------------');
     dbms_output.put_line('thread# : '|| v_max_sequence.thread#  || '  |  ' || 'max sequence# :   '|| v_max_sequence.max_sequence);
     end loop;
   close c_max_sequence;
@@ -50,11 +52,15 @@ Primary Current Max Sequence#');
   dbms_output.put_line('
 Primary Dest_id Error Information');
   dbms_output.put_line('=======================');
+  dbms_output.put_line('--------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| inst# |' || ' DEST_NAME            ' || '| ERROR                               |' || ' DESTINATION ADDRESS ' || '|');
+  dbms_output.put_line('--------------------------------------------------------------------------------------------');
   open c_dest_error;
     loop fetch c_dest_error into v_dest_error;
     exit when c_dest_error%notfound;
-    dbms_output.put_line('inst_id : '|| v_dest_error.inst_id || '  |  ' || 'dest_name : '|| v_dest_error.dest_name || '  |  ' || 'error : '|| v_dest_error.error || '  |  ' || 'destination : '|| v_dest_error.destination);
+    dbms_output.put_line('| '|| lpad(v_dest_error.inst_id,5) || ' | ' || rpad(v_dest_error.dest_name,20) || ' | ' || rpad(v_dest_error.error,35) || ' | ' || lpad(v_dest_error.destination,19) || ' |');
     end loop;
+    dbms_output.put_line('--------------------------------------------------------------------------------------------');
   close c_dest_error;
 else 
   dbms_output.put_line('

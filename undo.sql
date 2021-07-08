@@ -23,9 +23,8 @@ SELECT INST_ID,
  WHERE BEGIN_TIME > SYSDATE - 1
  ORDER BY BEGIN_TIME;
 
-set linesize 400
 set serveroutput on
-set feedback off
+
 declare 
   l_start    number;
   l_end      number;
@@ -34,6 +33,7 @@ declare
   v_value    number;
   v_value1   varchar2(20); 
   v_cnt      number;
+  v_roll_cnt number;
 
   cursor c_roll is select vs.sid || ',' || vs.serial# as sid, vs.username, rn.name roll_name, vt.start_time, vt.log_io, vt.phy_io, vt.used_ublk,
         round(vt.used_ublk * (select value/1024/1024 from v$parameter where name='db_block_size' and ROWNUM = 1),2) as used_usize, vt.used_urec, vt.recursive
@@ -104,7 +104,7 @@ order by sys.dba_rollback_segs.segment_id;
 
 begin
 
-  select value into v_value from v$parameter where name = '_rollback_segment_count';
+  select ksppstvl into v_value from x$ksppi x, x$ksppcv y where x.indx = y.indx and ksppinm = '_rollback_segment_count';
   select count(*) into v_cnt from v$rollname;
   select value into v_value1 from v$parameter where name = 'fast_start_parallel_rollback';
   dbms_output.put_line('
@@ -115,7 +115,14 @@ If RAC System Node Count > 3 be carefull!!! Oracle Max Rollback Segments is 3276
   dbms_output.put_line('_rollback_segment_count             ' || ' : ' || v_value);
   dbms_output.put_line('Current Node rollback segments Count' || ' : ' || v_cnt );
   
-
+  
+  select count(*) into v_roll_cnt from
+  v$transaction vt,
+  v$session vs,
+  v$rollname rn
+  where vt.addr = vs.taddr
+  and vt.xidusn = rn.usn;
+  if v_roll_cnt > 0 then
   dbms_output.put_line('
 Active transaction,rollback segments Information');
   dbms_output.put_line('======================');
@@ -129,8 +136,11 @@ Active transaction,rollback segments Information');
     end loop;
     dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_roll;
-
-
+  else 
+    dbms_output.put_line('
+These is no Transaction Use rollback segments,No Transaction');
+  dbms_output.put_line('======================');
+  end if;
 
    dbms_output.put_line('
 Rollback Segments Basic Status Information(only Show the Rollback Segment Size > 10M)
@@ -195,6 +205,7 @@ KTUXESTA means the transaction status
     end loop;
     dbms_output.put_line('------------------------------------------------------------------------------------------------------');
   close c_ktu;
+
   dbms_output.put_line('
 How long does it take to roll back(Minutes)');
   dbms_output.put_line('======================');
@@ -205,11 +216,11 @@ How long does it take to roll back(Minutes)');
     dbms_output.put_line('------------------------------------------------------------------------------------------------------');
     dbms_output.put_line('| Estimated remaining Minutes: '|| round(l_end/(l_start -l_end)) || ' min' || '                    |'         );
     dbms_output.put_line('------------------------------------------------------------------------------------------------------');
-  exception
-   when others then
-    dbms_output.put_line('------------------------------------------------------------------------------------------------------');
-    dbms_output.put_line('| There are no transactions that need to be rolled back at the moment.  ' || substr(SQLERRM,1,80) || '     |');
-    dbms_output.put_line('------------------------------------------------------------------------------------------------------');
+  -- exception
+  -- when others then
+  --  dbms_output.put_line('------------------------------------------------------------------------------------------------------');
+  --  dbms_output.put_line('| There are no transactions that need to be rolled back at the moment.  ' || substr(SQLERRM,1,80) || '     |');
+  --  dbms_output.put_line('------------------------------------------------------------------------------------------------------');
 end;
 /
 
