@@ -7,7 +7,7 @@ col sid_and_serial# for a15
 col terminal for a15
 col event for a26
 col machine for a25
-col program for a28
+col program for a20
 col sql_text for a20
 col sql_id for a13
 prompt Display Avg and Max Connections of All Nodes since Instance Startup

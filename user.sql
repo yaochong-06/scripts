@@ -6,6 +6,17 @@ col username for a12
 col LCOUNT for 999
 col PROFILE for a12
 
+
+select a.username,
+CASE B.LIMIT WHEN 'UNLIMITED' THEN NULL 
+     ELSE trunc(A.EXPIRY_DATE - SYSDATE)+b.limit END AS EXPIRED_DAYS  
+from dba_users a,dba_profiles b 
+where a.profile=b.profile 
+and a.account_status='OPEN' 
+and b.RESOURCE_NAME='PASSWORD_GRACE_TIME' 
+and a.expiry_date is not null 
+and b.limit <>'UNLIMITED'
+
 set linesize 400
 select distinct
         a.username,
@@ -19,7 +30,7 @@ select distinct
         sum(round(s.bytes/1024/1024/1024)) over(partition by s.owner) as USER_SEGMENT_GB,
         case when p.GRANTED_ROLE = 'DBA' then 'Yes' else 'No' end as "DBA Privs?"
 from
-        dba_users a, user$ b, dba_segments s ,dba_role_privs p
+        dba_users a, user$ b, dba_segments s ,dba_role_privs p,dba_profiles pr
 where a.user_id = b.USER#
 and a.username = s.owner
 and p.grantee = a.username
@@ -65,4 +76,16 @@ from dba_tab_privs where upper(grantee) like upper(:username);
 
 set head on feedback on
 
+
+
+/*I-AM-YUNQU-BUILTIN-SQL */ 
+select a.username,
+CASE B.LIMIT WHEN 'UNLIMITED' THEN NULL 
+     ELSE trunc(A.EXPIRY_DATE - SYSDATE)+b.limit END AS EXPIRED_DAYS  
+from dba_users a,dba_profiles b 
+where a.profile=b.profile 
+and a.account_status='OPEN' 
+and b.RESOURCE_NAME='PASSWORD_GRACE_TIME' 
+and a.expiry_date is not null 
+and b.limit <>'UNLIMITED'  order by 2;
 

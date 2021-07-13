@@ -68,3 +68,31 @@ type=>'text'
 ) comm
 FROM dual
 /
+
+
+
+
+
+
+
+
+
+/**yunqu**/
+
+
+select a.*,dbms_sqltune.report_sql_monitor(type=>'HTML', sql_id=>a.sql_id, sql_exec_id=>a.sql_exec_id, report_level=>'ALL') SQLMON
+ from (select
+ STATUS,SQL_ID,round((LAST_REFRESH_TIME-SQL_EXEC_START)*24*3600) ELAPSED_TIME,
+ round(ELAPSED_TIME/1e6) DB_TIME,round(CPU_TIME/1e6) DB_CPU,
+ SQL_EXEC_ID,to_char(sql_exec_start,'YYYY-MM-DD HH24:MI:SS') SQL_EXEC_START,
+ SQL_PLAN_HASH_VALUE,INST_ID, USERNAME,
+ '' as SQL_TEXT
+ from Gv$sql_Monitor
+ where
+ sql_plan_hash_value >0 and
+ status like 'DONE%'
+ and LAST_REFRESH_TIME>=sysdate - 600/3600/24
+ and LAST_REFRESH_TIME<=sysdate
+ and sql_text is not null
+ order by elapsed_time desc
+ ) a where rownum<= 2;

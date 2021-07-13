@@ -153,19 +153,23 @@ declare
 
 
 begin
-
+  dbms_output.enable(buffer_size => NULL);
   dbms_output.put_line('
+COL# Means COLUMN_POSITION
+VIS? Means VISIABLE
+UNI? Means UNIQUE
+USA? Means USABLE
 Index Information(contains Global and Local index)');
   dbms_output.put_line('======================');
-  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-  dbms_output.put_line('| INDEX_NAME             |' || ' COLUMN_NAME    ' || '| COLUMN_TYPE          ' || '| COLUMN_POSITION |' || ' TABLESPACE_NAME ' || '| INDEX_TYPE |' || ' DEGREE ' || '| INDEX_MB |' || ' DESCEND ' || '| USABLE |'  || ' LAST_ANALYZED '|| '| VISIABLE |'  || ' UNIQUE '|| '|');
-  dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| INDEX_NAME             |' || ' COLUMN_NAME    ' || '| COLUMN_TYPE          ' || '| COL# |' || ' TABLESPACE_NAME ' || '| INDEX_TYPE |' || ' DEGREE ' || '| INDEX_MB |' || ' DESCEND ' || '| USA? |'  || ' LAST_ANALYZED '|| '| VIS? |'  || ' UNI? '|| '|');
+  dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   open c_i;
     loop fetch c_i into v_i;
     exit when c_i%notfound;
-    dbms_output.put_line('| ' || rpad(v_i.INDEX_NAME,22) ||' | '|| rpad(v_i.COLUMN_NAME,14) || ' | ' ||rpad(v_i.col_type,20) ||' | '|| lpad(v_i.COLUMN_POSITION,15) || ' | '|| lpad(v_i.TABLESPACE_NAME,15) || ' | '|| lpad(v_i.INDEX_TYPE,10) || ' | '|| lpad(v_i.DEGREE,6) ||  ' | '|| lpad(v_i.INDEX_MB,8) || ' | '|| lpad(v_i.DESCEND,7) || ' | '|| lpad(v_i.USABLE,6) || ' | '|| lpad(v_i.LAST_ANALYZED,13) || ' | '|| lpad(v_i.visibility,8) || ' | '|| lpad(v_i.UNIQUENESS,7) ||'|');
+    dbms_output.put_line('| ' || rpad(v_i.INDEX_NAME,22) ||' | '|| rpad(v_i.COLUMN_NAME,14) || ' | ' ||rpad(v_i.col_type,20) ||' | '|| lpad(v_i.COLUMN_POSITION,4) || ' | '|| lpad(v_i.TABLESPACE_NAME,15) || ' | '|| lpad(v_i.INDEX_TYPE,10) || ' | '|| lpad(v_i.DEGREE,6) ||  ' | '|| lpad(v_i.INDEX_MB,8) || ' | '|| lpad(v_i.DESCEND,7) || ' | '|| lpad(v_i.USABLE,4) || ' | '|| lpad(v_i.LAST_ANALYZED,13) || ' | '|| lpad(v_i.visibility,4) || ' | '|| lpad(v_i.UNIQUENESS,4) ||' |');
     end loop;
-    dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('---------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_i;
 
 

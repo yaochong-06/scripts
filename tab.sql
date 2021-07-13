@@ -195,15 +195,17 @@ Non partitioned Table HWM Information basic Statistics');
 
 
   dbms_output.put_line('
+GST Means GLOBAL_STATS
+UST Means USER_STATS
 Non partitioned Table Statistics Information');
   dbms_output.put_line('======================');
   dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-  dbms_output.put_line('| COLUMN_NAME          |' || ' COLUMN_DETAIL        | ' ||' NUM_ROWS   |' || ' NUM_NULLS   |'|| ' DENSITY ' || '| CARDINALITY |' || ' SELECTIVITY ' || '| HISTOGRAM |' || ' NUM_BUCKETS' || ' | SAMPLE_SIZE |'|| ' GLOBAL_STATS ' || '| USER_STATS ' ||'|');
+  dbms_output.put_line('| COLUMN_NAME          |' || ' COLUMN_DETAIL        | ' ||' NUM_ROWS   |' || ' NUM_NULLS   |'|| ' DENSITY ' || '| CARDINALITY |' || ' SELECTIVITY ' || '| HISTOGRAM |' || ' NUM_BUCKETS' || ' | SAMPLE_SIZE |'|| ' GST ' || '| UST ' ||'|');
   dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   open c_stats;
     loop fetch c_stats into v_stats;
     exit when c_stats%notfound;
-    dbms_output.put_line('| ' || rpad(v_stats.COLUMN_NAME,20) ||' | '|| rpad(v_stats.COL1,20)  ||' | '|| lpad(v_stats.NUM_ROWS,11) || ' | '|| lpad(v_stats.NUM_NULLS,11) || ' | ' || lpad(v_stats.DENSITY,7) ||' | '|| lpad(v_stats.CARDINALITY,11) || ' | '|| lpad(v_stats.SELECTIVITY || '%',11) || ' | '|| lpad(v_stats.HISTOGRAM,9) || ' | '|| lpad(v_stats.NUM_BUCKETS,11) ||' | ' || lpad(v_stats.SAMPLE_SIZE,11) ||' | ' || lpad(v_stats.GLOBAL_STATS,12)|| ' | ' || lpad(v_stats.USER_STATS,10) || ' |');
+    dbms_output.put_line('| ' || rpad(v_stats.COLUMN_NAME,20) ||' | '|| rpad(v_stats.COL1,20)  ||' | '|| lpad(v_stats.NUM_ROWS,11) || ' | '|| lpad(v_stats.NUM_NULLS,11) || ' | ' || lpad(v_stats.DENSITY,7) ||' | '|| lpad(v_stats.CARDINALITY,11) || ' | '|| lpad(v_stats.SELECTIVITY || '%',11) || ' | '|| lpad(v_stats.HISTOGRAM,9) || ' | '|| lpad(v_stats.NUM_BUCKETS,11) ||' | ' || lpad(v_stats.SAMPLE_SIZE,11) ||' | ' || lpad(v_stats.GLOBAL_STATS,3)|| ' | ' || lpad(v_stats.USER_STATS,3) || ' |');
     end loop;
     dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_stats;
@@ -246,6 +248,7 @@ Count the number of occurrences for Join or Where');
   dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------');
   dbms_output.put_line('| COLUMN_NAME           |' || ' TIMESTAMP         |' || ' where = search ' || '| = join |' || ' <> join ' || '| where_range_search |' || ' where_like_search ' || '| where_null_search ' || '|');
   dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_stats.flush_database_monitoring_info;
   open c_j;
     loop fetch c_j into v_j;
     exit when c_j%notfound;
@@ -320,6 +323,7 @@ Count the number of occurrences for Join or Where');
   dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------');
   dbms_output.put_line('| COLUMN_NAME           |' || ' TIMESTAMP         |' || ' where = search ' || '| = join |' || ' <> join ' || '| where_range_search |' || ' where_like_search ' || '| where_null_search ' || '|');
   dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_stats.flush_database_monitoring_info;
   open c_j;
     loop fetch c_j into v_j;
     exit when c_j%notfound;

@@ -12,7 +12,7 @@ declare
     v_cnt number;
 
     cursor c_tbs is SELECT a.tablespace_name,
-       lpad(round((total-free) / maxsize * 100, 1) || '%',9) as used_pct,
+       round((total-free) / maxsize * 100, 1) || '%' as used_pct,
        rpad(lpad('#',ceil((nvl(total-free,0)/b.maxsize)*20),'#'),20,' ') as used,
        b.autoextensible,
        round(total/1024,1) as TOTAL_GB,
@@ -41,7 +41,7 @@ WHERE  a.tablespace_name = b.tablespace_name
 UNION ALL
 SELECT /*+ NO_MERGE */ 
   a.tablespace_name,
-        lpad(round(100 * (b.tot_used_mb / a.maxsize ),1) || '%',9) as used_pct,
+        round(100 * (b.tot_used_mb / a.maxsize ),1) || '%' as used_pct,
         rpad(lpad('#',ceil((nvl(b.tot_used_mb+0.001,0)/a.maxsize)*20),'#'),20,' ') as used,
         a.aet as autoextensible,
         round(a.avail_size_mb/1024,1) as TOTAL_GB,
@@ -128,18 +128,23 @@ FROM v$recovery_file_dest;
 
 begin
 
+  dbms_output.enable(buffer_size => NULL);
   dbms_output.put_line('
+FCNT Means DATAFILE_CNT
+Used% Means PCT_USED%
+AUTO? Means AUTOEXTEND
+MANAGE? Means EXTENT_MANAGEMENT
 Tablespace Used Information');
   dbms_output.put_line('======================');
-  dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------------------------------');
-  dbms_output.put_line('| TABLESPACE_NAME     |' || ' Used_Pct% ' || '|                 Used |' || ' AUTOEXTEND ' || '| TOTAL_GB |' || ' USED_GB ' || '| FREE_GB |' || ' FILE_CNT ' || '| STATUS |' || '  CONTENTS ' || '| EXTENT_MANAGE |' || ' MAXSIZE(MB) ' || '|'); 
-  dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| TABLESPACE_NAME     |' || ' Used% ' || '|                 Used |' || ' AUTO? ' || '| TOTAL_GB |' || ' USED_GB ' || '| FREE_GB |' || ' FCNT ' || '| STATUS |' || '  CONTENTS ' || '| MANAGE? |' || ' MAXSIZE(MB) ' || '|'); 
+  dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------');
   open c_tbs;
     loop fetch c_tbs into v_tbs;
     exit when c_tbs%notfound;
-    dbms_output.put_line('| ' || rpad(v_tbs.TABLESPACE_NAME,19) ||' | '|| lpad(v_tbs.used_pct,9) || ' | '|| rpad(v_tbs.used,20) || ' | '|| lpad(v_tbs.autoextensible,10) || ' | '|| lpad(v_tbs.TOTAL_GB,8) || ' | '|| lpad(v_tbs.USED_GB,7) || ' | '|| lpad(v_tbs.FREE_GB,7) || ' | '|| lpad(v_tbs.DATAFILE_COUNT,8) || ' | '|| lpad(v_tbs.STATUS,6) || ' | '|| lpad(v_tbs.CONTENTS,9) || ' | '||lpad(v_tbs.extent_management,13) ||' | ' || lpad(v_tbs.maxsize,12) || '|');
+    dbms_output.put_line('| ' || rpad(v_tbs.TABLESPACE_NAME,19) ||' | '|| lpad(v_tbs.used_pct,5) || ' | '|| rpad(v_tbs.used,20) || ' | '|| lpad(v_tbs.autoextensible,5) || ' | '|| lpad(v_tbs.TOTAL_GB,8) || ' | '|| lpad(v_tbs.USED_GB,7) || ' | '|| lpad(v_tbs.FREE_GB,7) || ' | '|| lpad(v_tbs.DATAFILE_COUNT,4) || ' | '|| lpad(v_tbs.STATUS,6) || ' | '|| lpad(v_tbs.CONTENTS,9) || ' | '||lpad(v_tbs.extent_management,7) ||' | ' || lpad(v_tbs.maxsize,12) || '|');
     end loop;
-    dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+    dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_tbs;
   
   select count(*) into v_tmp_cnt FROM V$SESSION A, V$TEMPSEG_USAGE B, V$SQLAREA C

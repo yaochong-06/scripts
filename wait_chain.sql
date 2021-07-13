@@ -6,7 +6,24 @@ set serveroutput on
 set linesize 500
 set pages 0
 declare
-    /* I-AM-YUNQU-BUILTIN-SQL */
+    v_wait_cnt number;
+    cursor c_wait_chain is SELECT 
+       RPAD('+', LEVEL ,'-') || sid||' '||sess.module session_detail,
+      decode(blocker_sid,null,'None',blocker_sid) as blocker_sid, 
+       in_wait_secs, 
+       wait_event_text,
+       object_name,
+       RPAD(' ', LEVEL )||sql_text sql_text
+    FROM v$wait_chains c
+           LEFT OUTER JOIN dba_objects o ON (row_wait_obj# = object_id)
+                      JOIN v$session sess USING (sid)
+           LEFT OUTER JOIN v$sql sql ON (sql.sql_id = sess.sql_id AND sql.child_number = sess.sql_child_number)
+CONNECT BY     PRIOR sid = blocker_sid
+           AND PRIOR sess_serial# = blocker_sess_serial#
+           AND PRIOR INSTANCE = blocker_instance
+START WITH blocker_is_valid = 'FALSE';
+    v_wait_chain c_wait_chain%rowtype;
+
     cursor c_lock is select
     b.type || '-' || b.id1 ||'-'|| b.id2 || case when b.type = 'TM' then (select '(' || owner || '.' || object_name || ')' from dba_objects where object_id = b.id1) else '' end as b_res,
     s1.sid || ','|| s1.serial# || '@' || s1.inst_id as b_blocker,
@@ -50,6 +67,25 @@ order by
 v_lock c_lock%rowtype;
 
 begin
+  select count(*) into v_wait_cnt from
+    gv$lock b,
+    gv$lock w,
+    gv$session s1,
+    gv$session s2
+where
+    b.block > 0
+and w.request > 0
+and b.id1 = w.id1
+and b.id2 = w.id2
+and b.type = w.type
+and b.inst_id = s1.inst_id
+and b.sid = s1.sid
+and w.inst_id = s2.inst_id
+and w.sid = s2.sid
+and b.type in ('TM','TX');
+
+
+  if v_wait_cnt > 0 then 
 
   dbms_output.put_line('
 Lock Information:
@@ -71,6 +107,28 @@ B_RUN(S)          means the blocking_sql running seconds');
     dbms_output.put_line('-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_lock;
  
+ else 
+  dbms_output.put_line('There is No Lock');
+  dbms_output.put_line('======================');
+ end if;
+
+
+
+  dbms_output.put_line('
+Wait Chain Information');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| SID AND MODULE       |' || ' Blocked By SID ' || '| IN_WAIT_SECS |' || ' WAIT_EVENT                          ' || '| OBJECT_NAME          |' || ' CURRENT SQL                                       ' || ' |');
+  dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+  open c_wait_chain;
+    loop fetch c_wait_chain into v_wait_chain;
+    exit when c_wait_chain%notfound;
+    dbms_output.put_line('| ' || rpad(v_wait_chain.SESSION_DETAIL,20) ||' | '|| lpad(v_wait_chain.BLOCKER_SID,14) || ' | '|| lpad(v_wait_chain.IN_WAIT_SECS,12) || ' | '|| rpad(v_wait_chain.WAIT_EVENT_TEXT,35) || ' | '|| rpad(v_wait_chain.OBJECT_NAME,20) || ' | '|| rpad(v_wait_chain.SQL_TEXT,50) || ' |');
+    end loop;
+    dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+   close c_wait_chain;
+
+
 end;
 /
 --batch kill one user's session
@@ -91,36 +149,4 @@ end;
 SELECT 
 'ROLLBACK FORCE "' || p.local_tran_id || '";' 
 FROM dba_2pc_pending p WHERE p.state <> 'forced rollback';
-
-
-
-
-column session_detail format a40 heading "Sid and module"
-column blocker_sid format 9999 heading "Blkd|by"
-column wait_event_text format a29 heading "Wait event"
-column object_name format a20 heading "Object"
-column sql_text format a70 heading "current sql"
---set pages 1000
---set lines 75
---set echo on
-
-SELECT RPAD('+', LEVEL ,'-') || sid||' '||sess.module session_detail,
-       blocker_sid, in_wait_secs, wait_event_text,
-       object_name,RPAD(' ', LEVEL )||sql_text sql_text
-FROM          v$wait_chains c
-           LEFT OUTER JOIN
-              dba_objects o
-           ON (row_wait_obj# = object_id)
-        JOIN
-           v$session sess
-        USING (sid)
-     LEFT OUTER JOIN
-        v$sql sql
-     ON (sql.sql_id = sess.sql_id
-         AND sql.child_number = sess.sql_child_number)
-CONNECT BY     PRIOR sid = blocker_sid
-           AND PRIOR sess_serial# = blocker_sess_serial#
-           AND PRIOR INSTANCE = blocker_instance
-START WITH blocker_is_valid = 'FALSE';
-
 

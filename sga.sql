@@ -1,3 +1,5 @@
+
+
 set serveroutput on 
 set verify off
 set timing off
@@ -220,9 +222,71 @@ where
   and la.name = 'row cache objects'
   order by 2,3,4,5;
   v_r c_row%rowtype;
+  
+  cursor c_b is select
+        /*+ ordered */
+        bp.name as pool_name,
+        u.username as username,
+        ob.name as object_name,
+        decode(ob.subname,null,'None',ob.subname) as sub_name,
+        decode(ob.type#,
+         0,'NEXT OBJECT',1,'INDEX',2,'TABLE',3, 'CLUSTER',4,'VIEW',5, 'SYNONYM',
+         6,'SEQUENCE',7, 'PROCEDURE',8, 'FUNCTION',9, 'PACKAGE',11, 'PACKAGE BODY',12, 'TRIGGER',13, 'TYPE',
+         14,'TYPE BODY',19, 'TABLE PARTITION', 20, 'INDEX PARTITION', 21, 'LOB',
+         22,'LIBRARY', 23, 'DIRECTORY', 24, 'QUEUE',28, 'JAVA SOURCE', 29, 'JAVA CLASS', 30,'JAVA RESOURCE',
+         32,'INDEXTYPE',33, 'OPERATOR',34,'TABLE SUBPARTITION',35,'INDEX SUBPARTITION',40,'LOB PARTITION', 41, 'LOB SUBPARTITION',
+         43, 'DIMENSION',
+         44, 'CONTEXT', 46, 'RULE SET', 47, 'RESOURCE PLAN',
+         48, 'CONSUMER GROUP',
+         51, 'SUBSCRIPTION', 52, 'LOCATION',
+         55, 'XML SCHEMA', 56, 'JAVA DATA',
+         57, 'SECURITY PROFILE', 59, 'RULE',
+         60, 'CAPTURE', 61, 'APPLY',
+         62, 'EVALUATION CONTEXT',
+         66, 'JOB', 67, 'PROGRAM', 68, 'JOB CLASS', 69, 'WINDOW',
+         72, 'WINDOW GROUP', 74, 'SCHEDULE', 79, 'CHAIN',
+         81, 'FILE GROUP',
+        'UNDEFINED') object_type,
+        sum(bh.ct) as blocks,
+        round((sum(bh.ct)*(select value from v$parameter where name = 'db_block_size' and rownum = 1))/1024/1024,2) as size_mb
+from (
+        select set_ds, obj, count(*) ct
+        from x$bh group by set_ds, obj
+        )                      bh,
+        obj$                   ob,
+        x$kcbwds               ws,
+        v$buffer_pool          bp,
+        dba_users              u
+where
+        ob.dataobj# = bh.obj
+and     ob.owner#   = u.user_id
+and     bh.set_ds   = ws.addr
+and     ws.set_id in (bp.lo_setid,bp.hi_setid)  -- between bp.lo_setid and bp.hi_setid
+and     bp.buffers != 0        --  Eliminate any pools not in use^M
+and     u.username not in('SYS','SYSTEM','WMSYS','XDB',
+                       'QMONITOR','OUTLN','ORDSYS','ORDDATA','OJVMSYS','MDSYS','LBACSYS','DVSYS',
+                       'DBSNMP','APEX_040200','AUDSYS','CTXSYS','APEX_030200','EXFSYS','OLAPSYS','SYSMAN','WH_SYNC','GSMADMIN_INTERNAL')
+group by u.username,bp.name, ob.name,ob.type#,ob.subname
+order by bp.name, blocks desc, ob.name, ob.subname;
+  v_b c_b%rowtype;
+  v_dic_per varchar2(200);
+  v_lib_per varchar2(200); 
+
 
 begin
   DBMS_OUTPUT.ENABLE(buffer_size => null);
+
+  select trunc(sum(gets-getmisses-usage-fixed)/sum(gets)*100,2) into v_dic_per from v$rowcache;
+  select trunc(sum(pinhits)/sum(pins)*100,2) into v_lib_per from v$librarycache;
+   dbms_output.put_line('
+Dictionary Cache hit % and Library Cache hit%)');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('----------------------------------------------');
+  dbms_output.put_line('| Dictionary Cache hit% |' || ' Library Cache hit%' || ' |');
+  dbms_output.put_line('----------------------------------------------');
+  dbms_output.put_line('| ' || lpad(v_dic_per,21) ||' | '|| lpad(v_lib_per,18) || ' |');
+  dbms_output.put_line('----------------------------------------------');
+
 
   dbms_output.put_line('
 SGA and PGA Usage Size and Pct)');
@@ -298,70 +362,84 @@ Doc ID 2359175.1');
     end loop;
     dbms_output.put_line('-----------------------------------------------------------------------------------------------------------------------------------------------------------------');
   close c_row;
+
+  dbms_output.put_line('
+Which Table or Index Objects in DB Buffer Cache(Defaul Pool,Keep Pool) ');
+  dbms_output.put_line('======================');
+  dbms_output.put_line('-----------------------------------------------------------------------------------------------------------------------------');
+  dbms_output.put_line('| POOL_NAME  ' || '| USERNAME         |' || ' OBJECT_NAME           ' || '| SUB_NAME          |' || ' OBJECT_TYPE       ' || '| BLOCKS     |' || ' SIZE_MB      ' ||'|');
+  dbms_output.put_line('-----------------------------------------------------------------------------------------------------------------------------');
+  open c_b;
+    loop fetch c_b into v_b;
+    exit when c_b%notfound;
+    dbms_output.put_line('| ' || rpad(v_b.POOL_NAME,10) || ' | '|| rpad(v_b.USERNAME,16) ||' | '|| rpad(v_b.OBJECT_NAME,21) || ' | '|| rpad(v_b.SUB_NAME,17) || ' | '|| rpad(v_b.OBJECT_TYPE,17) || ' | '|| lpad(v_b.BLOCKS,10) || ' | '|| lpad(v_b.SIZE_MB,12) ||  ' |');
+    end loop;
+    dbms_output.put_line('-----------------------------------------------------------------------------------------------------------------------------');
+  close c_b;
+
+
 end;
 /
 
 
+--Library pool usage
+-- library pool
+set pages 1000
+set lines 400
+break on report 
+compute sum of gets on report
+compute sum of pins on report
+compute avg of "gethitratio(%)" on report
+compute avg of "pinhitratio(%)" on report
+compute avg of "loadpinratio(%)" on report
+compute avg of invalidations on report
+col namespace for a40
+prompt loadpinratio < 1%
+prompt gethitratio > 95% 
+prompt invalidations = 0
+select namespace,gets,round(gethitratio*100,2) "gethitratio(%)",
+       pins,round(pinhitratio*100,2) "pinhitratio(%)",
+       round((reloads)/decode(pins,0,1,pins)*100,2) "loadpinratio(%)", invalidations
+  from v$librarycache;
+
+prompt Estimate library cache size = sum(sharable_mem from v$db_object_cache) 
+prompt                               + 250 * total_opening_cursors
+select sum(estimate_size) "estimate library cache size"
+  from   (
+    select sum(sharable_mem) estimate_size from v$db_object_cache
+      where type in ('PACKAGE','PACKAGE BODY','FUNCTION','PROCEDURE')
+    union all  
+    select sum(sharable_mem) estimate_size from v$db_object_cache 
+      where executions > 5  
+    union all
+    select 250 * sum(users_opening ) estimate_size from v$sql
+  ) ;
 
 
-column pool_name format a9
-column object_name format a20
-column sub_name format a20
+-- dictionary pool
+compute avg of "getmissratio(%)" on report
+prompt getmisses/gets < 15%
+select parameter, round(getmisses/decode(gets,0,1,gets)*100,2) "getmissratio(%)"
+  from v$rowcache
+  order by 2 desc;
 
-column OBJECT_TYPE for a28
-column username for a16
-column blocks format 999,999
-set pagesize 60
-set timing off
-set linesize 500
-select
-        /*+ ordered */
-        bp.name as pool_name,
-        u.username as username,
-        ob.name as object_name,
-        ob.subname as sub_name,
-        decode(ob.type#,
-         0,'NEXT OBJECT',1,'INDEX',2,'TABLE',3, 'CLUSTER',4,'VIEW',5, 'SYNONYM', 
-         6,'SEQUENCE',7, 'PROCEDURE',8, 'FUNCTION',9, 'PACKAGE',11, 'PACKAGE BODY',12, 'TRIGGER',13, 'TYPE',
-         14,'TYPE BODY',19, 'TABLE PARTITION', 20, 'INDEX PARTITION', 21, 'LOB',
-         22,'LIBRARY', 23, 'DIRECTORY', 24, 'QUEUE',28, 'JAVA SOURCE', 29, 'JAVA CLASS', 30,'JAVA RESOURCE',
-         32,'INDEXTYPE',33, 'OPERATOR',34,'TABLE SUBPARTITION',35,'INDEX SUBPARTITION',40,'LOB PARTITION', 41, 'LOB SUBPARTITION',
-         43, 'DIMENSION',
-         44, 'CONTEXT', 46, 'RULE SET', 47, 'RESOURCE PLAN',
-         48, 'CONSUMER GROUP',
-         51, 'SUBSCRIPTION', 52, 'LOCATION',
-         55, 'XML SCHEMA', 56, 'JAVA DATA',
-         57, 'SECURITY PROFILE', 59, 'RULE',
-         60, 'CAPTURE', 61, 'APPLY',
-         62, 'EVALUATION CONTEXT',
-         66, 'JOB', 67, 'PROGRAM', 68, 'JOB CLASS', 69, 'WINDOW',
-         72, 'WINDOW GROUP', 74, 'SCHEDULE', 79, 'CHAIN',
-         81, 'FILE GROUP',
-        'UNDEFINED') object_type,
-        sum(bh.ct) as blocks,
-        round((sum(bh.ct)*(select value from v$parameter where name = 'db_block_size' and rownum = 1))/1024/1024,2) as size_mb
-from (
-        select set_ds, obj, count(*) ct
-        from x$bh group by set_ds, obj
-        )                      bh,
-        obj$                   ob,
-        x$kcbwds               ws,
-        v$buffer_pool          bp,
-        dba_users              u
-where
-        ob.dataobj# = bh.obj
-and     ob.owner#   = u.user_id
-and     bh.set_ds   = ws.addr
-and     ws.set_id in (bp.lo_setid,bp.hi_setid)  -- between bp.lo_setid and bp.hi_setid
-and     bp.buffers != 0        --  Eliminate any pools not in use
-and     u.username not in('SYS','SYSTEM','WMSYS','XDB',
-                       'QMONITOR','OUTLN','ORDSYS','ORDDATA','OJVMSYS','MDSYS','LBACSYS','DVSYS',
-                       'DBSNMP','APEX_040200','AUDSYS','CTXSYS','APEX_030200','EXFSYS','OLAPSYS','SYSMAN','WH_SYNC','GSMADMIN_INTERNAL')
-group by u.username,bp.name, ob.name,ob.type#,ob.subname
-order by bp.name, blocks desc, ob.name, ob.subname;
+-- shared_pool_reserved
+prompt free_space > 1/2 shared_pool_reserved and request_misses = 0 ---- too large
+prompt request_failures > 0  --- too small 
+select free_space,avg_free_size,request_misses,request_failures,aborted_requests
+  from v$shared_pool_reserved;
 
-prompt Buffer Pool Information
-select name, block_size, buffers , (block_size * buffers) /1024 /1024 buffer_size_mb from v$buffer_pool;
-
-prompt buffer_pool_working_data_sets
-select set_id,cnum_set,set_latch,nxt_repl,prv_repl,nxt_replax, prv_replax,cnum_repl,anum_repl, dbwr_num from x$kcbwds;
+col object_name format a30    
+col owner format a10
+prompt object could be pin in the database
+select 
+  owner,
+  name as object_name,
+  sharable_mem,
+  executions,
+  type,
+  loads
+from v$db_object_cache 
+where sharable_mem > 10000
+  and kept = 'NO'
+  and type in ('PACKAGE','PACKAGE BODY','FUNCTION','PROCEDURE','SEQUENCE','TYPE','TRIGGER','SYNONYM');

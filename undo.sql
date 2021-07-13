@@ -103,7 +103,7 @@ order by sys.dba_rollback_segs.segment_id;
   v_ktu c_ktu%rowtype;
 
 begin
-
+  dbms_output.enable(buffer_size => NULL);
   select ksppstvl into v_value from x$ksppi x, x$ksppcv y where x.indx = y.indx and ksppinm = '_rollback_segment_count';
   select count(*) into v_cnt from v$rollname;
   select value into v_value1 from v$parameter where name = 'fast_start_parallel_rollback';
